@@ -19,43 +19,6 @@ enum UserRole {
   Customer
 }
 
-// enum Brand {
-//   Chevrolet
-//   Ford
-//   Mustang
-//   Honda
-//   KWID
-//   Fiat
-//   Porsche
-//   Mercedes
-//   Agrale
-//   Aston_Martin
-//   Audi
-//   BMW
-//   Citroen
-//   Ferrari
-//   Hyundai
-//   Jeep
-//   Jaguar
-//   Kia
-//   Lamborghini
-//   Land_Rover
-//   Lexus
-//   Maserati
-//   McLaren
-//   Mitsubishi
-//   Nissan
-//   Peugeot
-//   RAM
-//   Renault
-//   Rolls_Royce
-//   Subaru
-//   Suzuki
-//   Toyota
-//   Volkswagen
-//   Volvo
-// }
-
 enum Doors {
   Two
   Three
@@ -111,7 +74,7 @@ enum Capacity {
   Six
 }
 
-model Favorites {
+model Favorite {
   id              String        @id @unique @default(uuid())
   User            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId          String?
@@ -130,7 +93,7 @@ model User {
   password      String
   roles         UserRole[]      @default([])
   advertisement Advertisement[]
-  favorites     Favorites[]
+  favorites     Favorite[]
   likes         Like[]
   revoked       DateTime?
   createdAt     DateTime        @default(now())
@@ -139,8 +102,8 @@ model User {
 
 model Like {
   id              String         @id @unique @default(uuid())
-  comment         Comment        @relation(fields: [commentId], references: [id])
-  commentId       String
+  feedback        Feedback       @relation(fields: [feedbackId], references: [id])
+  feedbackId      String
   user            User           @relation(fields: [userId], references: [id])
   userId          String
   Advertisement   Advertisement? @relation(fields: [advertisementId], references: [id])
@@ -148,13 +111,13 @@ model Like {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime
 
-  @@unique([commentId, userId])
+  @@unique([feedbackId, userId]) // kalil oq significa o unique
 }
 
-model Comment {
+model Feedback {
   id              String         @id @default(uuid())
   stars           Float
-  comment         String
+  comment         String // kalil como vai funcionar o colocar e remover like se o cara ja tiver dado like ? chamada + front
   advertisement   Advertisement? @relation(fields: [advertisementId], references: [id])
   advertisementId String?
   likes           Like[]
@@ -184,23 +147,23 @@ model Brand {
 }
 
 model Advertisement {
-  id           String      @id @default(uuid())
-  comments     Comment[]
+  id           String     @id @default(uuid())
+  feedbacks    Feedback[]
   km           Float
   localization String
   phone        String
-  images       Image[]     @relation("images")
-  thumbnail    Image       @relation("thumbnail", fields: [thumbnailId], references: [id])
-  thumbnailId  String      @unique
-  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  images       Image[]    @relation("images")
+  thumbnail    Image      @relation("thumbnail", fields: [thumbnailId], references: [id])
+  thumbnailId  String     @unique
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String
-  favorites    Favorites[]
+  favorites    Favorite[]
   title        String
   description  String
   year         Int
   likes        Like[]
   details      String[]
-  brand        Brand       @relation(fields: [brandId], references: [id])
+  brand        Brand      @relation(fields: [brandId], references: [id])
   brandId      String
   doors        Doors
   model        Model
