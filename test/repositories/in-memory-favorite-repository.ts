@@ -7,6 +7,7 @@ import {
   FindAllProps,
   FindByUserIdProps,
 } from '@root/domain/application/repositories/favorite.repository';
+import { Capacity, Doors, Fuel, GearBox } from '@root/domain/enterprise/entities/advertisement.entity';
 import { FavoriteEntity } from '@root/domain/enterprise/entities/favorite.entity';
 import { FavoriteAdminDetails } from '@root/domain/enterprise/value-object/favorite-admin-details';
 import { FavoriteDetails } from '@root/domain/enterprise/value-object/favorite-details';
@@ -60,13 +61,52 @@ export class InMemoryFavoriteRepository implements FavoriteRepository {
     return Maybe.some(mappedFavorites);
   }
 
-  findAllByUserId({ limit, page, userId }: FindAllByUserIdProps): AsyncMaybe<FavoriteDetails[]> {
-    throw new Error('Method not implemented.');
+  async findAllByUserId({ limit, page, userId }: FindAllByUserIdProps): AsyncMaybe<FavoriteDetails[]> {
+    const favorites = await this.favorites.filter((fav) => fav.userId.toValue() === userId.toValue());
+
+    const mappedFavorites = favorites.map((fav) => {
+      const advertisement = this.advertisementRespository.advertisements.find(
+        (ad) => ad.id.toValue() === fav.advertisementId.toValue(),
+      );
+
+      return FavoriteDetails.create({
+        advertisement: {
+          capacity: Capacity[advertisement.capacity],
+          doors: Doors[advertisement.doors],
+          fuel: Fuel[advertisement.fuel],
+          gearBox: GearBox[advertisement.gearBox],
+          id: advertisement.id,
+          km: advertisement.km,
+          price: advertisement.price,
+          thumbnailUrl: advertisement.thumbnailUrl,
+          title: advertisement.title,
+        },
+        id: fav.id,
+      });
+    });
+
+    const paginetedFavorites = mappedFavorites.slice((page - 1) * limit, limit * page);
+
+    return Maybe.some(paginetedFavorites);
   }
-  findByUserId({ advertisementId, userId }: FindByUserIdProps): AsyncMaybe<FavoriteEntity> {
-    throw new Error('Method not implemented.');
+
+  async findByUserId({ advertisementId, userId }: FindByUserIdProps): AsyncMaybe<FavoriteEntity> {
+    const favorite = this.favorites.find(
+      (fav) => fav.advertisementId.toValue() === advertisementId.toValue() && fav.userId.toValue() === userId.toValue(),
+    );
+
+    if (!favorite) return null;
+
+    return Maybe.some(favorite);
   }
-  delete({ userId, favoriteId }: DeleteProps): AsyncMaybe<void> {
-    throw new Error('Method not implemented.');
+
+  async delete({ userId, favoriteId }: DeleteProps): AsyncMaybe<void> {
+    const favorites = await this.favorites.filter(
+      (fav) => fav.id.toValue() !== favoriteId.toValue() && fav.userId.toValue() === userId.toValue(),
+    );
+
+    this.favorites = favorites;
+
+    return;
   }
 }
