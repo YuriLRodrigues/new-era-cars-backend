@@ -74,10 +74,16 @@ enum Capacity {
   Six
 }
 
+enum SoldStatus {
+  Active
+  Reserved
+  Sold
+}
+
 model Favorite {
   id              String        @id @unique @default(uuid())
-  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId          String?
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
   advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
   advertisementId String
   createdAt       DateTime      @default(now())
@@ -103,48 +109,46 @@ model User {
 
 model Like {
   id              String         @id @unique @default(uuid())
-  feedback        Feedback       @relation(fields: [feedbackId], references: [id])
-  feedbackId      String
+  feedback        Feedback?      @relation(fields: [feedbackId], references: [id])
+  feedbackId      String?
   user            User           @relation(fields: [userId], references: [id])
   userId          String
-  Advertisement   Advertisement? @relation(fields: [advertisementId], references: [id])
+  advertisement   Advertisement? @relation(fields: [advertisementId], references: [id])
   advertisementId String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime
 
   @@unique([feedbackId, userId])
+  @@unique([advertisementId, userId])
 }
 
 model Feedback {
-  id              String         @id @default(uuid())
+  id              String        @id @default(uuid())
   stars           Float
-  comment         String // kalil como vai funcionar o colocar e remover like se o cara ja tiver dado like ? chamada + front
-  advertisement   Advertisement? @relation(fields: [advertisementId], references: [id])
-  advertisementId String?
+  comment         String
+  advertisement   Advertisement @relation(fields: [advertisementId], references: [id])
+  advertisementId String
+  user            User          @relation(fields: [userId], references: [id])
+  userId          String
   likes           Like[]
-  createdAt       DateTime       @default(now())
+  createdAt       DateTime      @default(now())
   updatedAt       DateTime
-  user            User?          @relation(fields: [userId], references: [id])
-  userId          String?
 }
 
 model Image {
-  id                     String         @id @default(uuid())
-  url                    String
-  advertisementImages    Advertisement? @relation("images", fields: [advertisementId], references: [id], onDelete: Cascade)
-  advertisementId        String?
-  advertisementThumbnail Advertisement? @relation("thumbnail")
-  Brand                  Brand[]
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime
+  id                  String         @id @default(uuid())
+  url                 String
+  advertisementImages Advertisement? @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
+  advertisementId     String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime
 }
 
 model Brand {
   id            String          @id @default(uuid())
   name          String
-  image         Image           @relation(fields: [imageId], references: [id])
-  imageId       String
-  Advertisement Advertisement[]
+  logoUrl       String
+  advertisement Advertisement[]
   createdAt     DateTime
   updatedAt     DateTime
 }
@@ -155,9 +159,8 @@ model Advertisement {
   km           Float
   localization String
   phone        String
-  images       Image[]    @relation("images")
-  thumbnail    Image      @relation("thumbnail", fields: [thumbnailId], references: [id])
-  thumbnailId  String     @unique
+  images       Image[]
+  thumbnailUrl String
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String
   favorites    Favorite[]
@@ -172,7 +175,7 @@ model Advertisement {
   model        Model
   color        Color
   price        Float
-  wasSold      Boolean
+  soldStatus   SoldStatus
   salePrice    Float
   gearBox      GearBox
   fuel         Fuel
