@@ -1,12 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { Either, left, right } from '@root/core/logic/Either';
-import { MinimalAdvertisementDetails } from '@root/domain/enterprise/value-object/minimal-advertisement-details';
 
-import { AdvertisementRepository } from '../../repositories/advertisement.repository';
+import { AdvertisementRepository, FindAllAdvertisementsProps } from '../../repositories/advertisement.repository';
 import { UserRepository } from '../../repositories/user.repository';
 
-type Output = Either<Error, MinimalAdvertisementDetails[]>;
+type Output = Either<Error, FindAllAdvertisementsProps>;
 
 type Input = {
   userId: UniqueEntityId;

@@ -21,10 +21,10 @@ export class CreateBrandUseCase {
   ) {}
 
   async execute({ logoUrl, name, userId }: Input): Promise<Output> {
-    const { isSome: userNotExists, value: user } = await this.userRepository.findById({ id: userId });
+    const { isNone: userNotExists, value: user } = await this.userRepository.findById({ id: userId });
 
     if (userNotExists()) {
-      return left(new Error('Brand already exists'));
+      return left(new Error('User not found'));
     }
 
     if (!user.roles.includes(UserRoles.Manager)) {
