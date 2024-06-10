@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Either, right } from '@root/core/logic/Either';
-import { MinimalAdvertisementDetails } from '@root/domain/enterprise/value-object/minimal-advertisement-details';
 import { QueryDataDTO } from '@root/infra/controller/advertisemet/dto/query-data.dto';
 
-import { AdvertisementRepository } from '../../repositories/advertisement.repository';
+import { AdvertisementRepository, FindAllAdvertisementsProps } from '../../repositories/advertisement.repository';
 
-type Output = Either<Error, MinimalAdvertisementDetails[]>;
+type Output = Either<Error, FindAllAdvertisementsProps>;
 
 type Input = {
   page: number;
