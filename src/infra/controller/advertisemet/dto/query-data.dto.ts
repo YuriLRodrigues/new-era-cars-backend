@@ -1,21 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { Color, FilterDate, Fuel, Likes, Model } from '@root/domain/enterprise/entities/advertisement.entity';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class QueryDataDTO {
   @ApiProperty({ example: 'SUV', description: 'O modelo/tipo do veículo' })
-  @IsString()
+  @IsEnum(Model)
   @IsOptional()
-  model?: string;
+  model?: Model;
 
   @ApiProperty({ example: 'Gasolina', description: 'O tipo de combustível do veículo' })
-  @IsString()
+  @IsEnum(Fuel)
   @IsOptional()
-  fuel?: string;
+  fuel?: Fuel;
 
-  @ApiProperty({ example: '10000', description: 'A quilometragem máxima desejada' })
-  @IsString()
+  @ApiProperty({ example: 10000, description: 'A quilometragem máxima desejada' })
+  @IsNumber()
   @IsOptional()
-  km?: string;
+  km?: number;
 
   @ApiProperty({ example: 'Honda', description: 'A marca do veículo' })
   @IsString()
@@ -23,17 +24,27 @@ export class QueryDataDTO {
   brand?: string;
 
   @ApiProperty({ example: 'Preto', description: 'A cor do veículo' })
-  @IsString()
+  @IsEnum(Color)
   @IsOptional()
-  color?: string;
+  color?: Color;
 
-  @ApiProperty({ example: '2020', description: 'O ano do veículo' })
-  @IsString()
+  @ApiProperty({ example: 2020, description: 'O ano do veículo' })
+  @IsNumber()
   @IsOptional()
-  year?: string;
+  year?: number;
 
-  @ApiProperty({ example: '25000', description: 'O preço máximo desejado' })
-  @IsString()
+  @ApiProperty({ example: 25000, description: 'O preço máximo desejado' })
+  @IsNumber()
   @IsOptional()
-  price?: string;
+  price?: number;
+
+  @ApiProperty({ example: 'desc', description: 'A ordem dos anúncios de acordo com a data' })
+  @IsEnum(FilterDate)
+  @IsOptional()
+  FilterDate?: FilterDate;
+
+  @ApiProperty({ example: 'desc', description: 'A ordem dos anúncios de acordo com os likes' })
+  @IsEnum(Likes)
+  @IsOptional()
+  likes?: Likes;
 }
