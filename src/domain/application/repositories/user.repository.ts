@@ -36,6 +36,7 @@ export abstract class UserRepository {
   abstract findByEmail({ email }: FindByEmailProps): AsyncMaybe<UserEntity | null>;
   abstract findAllUsers({ limit, page }: FindAllUsersProps): AsyncMaybe<UserEntity[]>;
   abstract register({ user }: RegisterProps): AsyncMaybe<UserEntity>;
+  abstract findAllSellCount; // pode receber um parametro pra filtrar por uma data/mes
   abstract save({ user }: SaveProps): AsyncMaybe<UserEntity>;
   abstract delete({ userId }: DeleteProps): AsyncMaybe<void>;
 }

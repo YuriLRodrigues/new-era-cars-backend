@@ -6,11 +6,6 @@ export type FindByIdProps = {
   id: UniqueEntityId;
 };
 
-export type FindAllProps = {
-  page: number;
-  limit: number;
-};
-
 export type CreateProps = {
   brand: BrandEntity;
 };
@@ -33,5 +28,5 @@ export abstract class BrandRepository {
   abstract create({ brand }: CreateProps): AsyncMaybe<BrandEntity>;
   abstract delete({ brandId }: DeleteProps): AsyncMaybe<void>;
   abstract save({ brand }: SaveProps): AsyncMaybe<void>;
-  abstract findAll({ limit, page }: FindAllProps): AsyncMaybe<BrandEntity[]>;
+  abstract findAll(): AsyncMaybe<BrandEntity[]>;
 }

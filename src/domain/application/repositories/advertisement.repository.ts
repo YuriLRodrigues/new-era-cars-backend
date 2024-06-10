@@ -1,8 +1,14 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { AsyncMaybe } from '@root/core/logic/Maybe';
-import { AdvertisementEntity } from '@root/domain/enterprise/entities/advertisement.entity';
+import {
+  AdvertisementEntity,
+  Color,
+  Date,
+  Fuel,
+  Likes,
+  Model,
+} from '@root/domain/enterprise/entities/advertisement.entity';
 import { MinimalAdvertisementDetails } from '@root/domain/enterprise/value-object/minimal-advertisement-details';
-import { QueryDataDTO } from '@root/infra/controller/advertisemet/dto/query-data.dto';
 
 export type FindAllAdsByUserIdProps = {
   userId: UniqueEntityId;
@@ -13,7 +19,17 @@ export type FindAllAdsByUserIdProps = {
 export type FindAllAdsProps = {
   page: number;
   limit: number;
-  search?: QueryDataDTO;
+  search?: {
+    model?: Model;
+    fuel?: Fuel;
+    color?: Color;
+    year?: number;
+    price?: number;
+    brand?: string;
+    km?: number;
+    data?: Date;
+    likes?: Likes;
+  };
 };
 
 export type FindAdByIdProps = {
@@ -32,14 +48,13 @@ export type SaveAdProps = {
   advertisement: AdvertisementEntity;
 };
 
-export abstract class AdvertisementRepository {
-  abstract findAllAdsByUserId({
-    userId,
-    page,
-    limit,
-  }: FindAllAdsByUserIdProps): AsyncMaybe<MinimalAdvertisementDetails[]>;
+export type FindAllAdvertisementsProps = {
+  data: MinimalAdvertisementDetails[];
+  totalPages: number;
+};
 
-  abstract findAllAds({ page, limit, search }: FindAllAdsProps): AsyncMaybe<MinimalAdvertisementDetails[]>;
+export abstract class AdvertisementRepository {
+  abstract findAllAdsByUserId({ userId, page, limit }: FindAllAdsByUserIdProps): AsyncMaybe<FindAllAdvertisementsProps>;
 
   abstract findAdById({ id }: FindAdByIdProps): AsyncMaybe<AdvertisementEntity>;
 
@@ -48,4 +63,16 @@ export abstract class AdvertisementRepository {
   abstract deleteAd({ advertisementId }: DeleteAdProps): AsyncMaybe<void>;
 
   abstract saveAd({ advertisement }: SaveAdProps): AsyncMaybe<void>;
+
+  abstract findAllAds({ page, limit, search }: FindAllAdsProps): AsyncMaybe<FindAllAdvertisementsProps>; // arrumar e passar o filtro de data decres/nome decres/preço decres/pesquisar
+
+  abstract findAllActiveCount;
+
+  abstract findAllReservedCount;
+
+  abstract findAllSellCount; // pode receber um parametro pra filtrar por uma data/mes
+
+  abstract findAllSellers;
+
+  abstract findTopSellers;
 }
