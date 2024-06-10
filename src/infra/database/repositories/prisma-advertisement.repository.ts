@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Color, Model } from '@prisma/client';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { AsyncMaybe, Maybe } from '@root/core/logic/Maybe';
 import {
@@ -8,6 +9,7 @@ import {
   FindAdByIdProps,
   FindAllAdsByUserIdProps,
   FindAllAdsProps,
+  FindAllAdvertisementsProps,
   SaveAdProps,
 } from '@root/domain/application/repositories/advertisement.repository';
 import {
@@ -38,11 +40,7 @@ export class PrismaAdvertisementRepository implements AdvertisementRepository {
     return Maybe.some(mappedAd);
   }
 
-  async findAllAdsByUserId({
-    userId,
-    page,
-    limit,
-  }: FindAllAdsByUserIdProps): AsyncMaybe<MinimalAdvertisementDetails[]> {
+  async findAllAdsByUserId({ userId, page, limit }: FindAllAdsByUserIdProps): AsyncMaybe<FindAllAdvertisementsProps> {
     const ads = await this.prismaService.advertisement.findMany({
       where: { userId: userId.toValue() },
       skip: page,
@@ -67,50 +65,8 @@ export class PrismaAdvertisementRepository implements AdvertisementRepository {
       },
     });
 
-    const selectedAds = ads.map((ad) =>
-      MinimalAdvertisementDetails.create({
-        advertisementId: new UniqueEntityId(ad.id),
-        title: ad.title,
-        price: ad.price,
-        km: ad.km,
-        capacity: Capacity[ad.capacity],
-        doors: Doors[ad.doors],
-        fuel: Fuel[ad.fuel],
-        gearBox: GearBox[ad.gearBox],
-        thumbnailUrl: ad.thumbnailUrl,
-        brand: {
-          brandId: new UniqueEntityId(ad.brand.id),
-          imageUrl: ad.brand.logoUrl,
-          name: ad.brand.name,
-        },
-      }),
-    );
-
-    return Maybe.some(selectedAds);
-  }
-
-  async findAllAds({ page, limit }: FindAllAdsProps): AsyncMaybe<MinimalAdvertisementDetails[]> {
-    const ads = await this.prismaService.advertisement.findMany({
-      skip: page,
-      take: limit,
-      select: {
-        brand: {
-          select: {
-            name: true,
-            logoUrl: true,
-            id: true,
-          },
-        },
-        km: true,
-        price: true,
-        title: true,
-        capacity: true,
-        doors: true,
-        fuel: true,
-        gearBox: true,
-        id: true,
-        thumbnailUrl: true,
-      },
+    const totalPages = await this.prismaService.advertisement.count({
+      where: { userId: userId.toValue() },
     });
 
     const selectedAds = ads.map((ad) =>
@@ -132,7 +88,72 @@ export class PrismaAdvertisementRepository implements AdvertisementRepository {
       }),
     );
 
-    return Maybe.some(selectedAds);
+    return Maybe.some({ data: selectedAds, totalPages });
+  }
+
+  async findAllAds({ page, limit, search }: FindAllAdsProps): AsyncMaybe<FindAllAdvertisementsProps> {
+    const ads = await this.prismaService.advertisement.findMany({
+      skip: page,
+      take: limit,
+      where: {
+        brand: {
+          name: search.brand || undefined,
+        },
+        fuel: Fuel[search.fuel] || undefined,
+        color: Color[search.color] || undefined,
+        model: Model[search.model] || undefined,
+        year: search.year || undefined,
+        km: search.km || undefined,
+        price: search.price || undefined,
+      },
+      orderBy: {
+        likes: {
+          _count: search.likes || undefined,
+        },
+        createdAt: search.data || undefined,
+      },
+      select: {
+        brand: {
+          select: {
+            name: true,
+            logoUrl: true,
+            id: true,
+          },
+        },
+        km: true,
+        price: true,
+        title: true,
+        capacity: true,
+        doors: true,
+        fuel: true,
+        gearBox: true,
+        id: true,
+        thumbnailUrl: true,
+      },
+    });
+
+    const totalPages = await this.prismaService.advertisement.count();
+
+    const selectedAds = ads.map((ad) =>
+      MinimalAdvertisementDetails.create({
+        advertisementId: new UniqueEntityId(ad.id),
+        title: ad.title,
+        price: ad.price,
+        km: ad.km,
+        capacity: Capacity[ad.capacity],
+        doors: Doors[ad.doors],
+        fuel: Fuel[ad.fuel],
+        gearBox: GearBox[ad.gearBox],
+        thumbnailUrl: ad.thumbnailUrl,
+        brand: {
+          brandId: new UniqueEntityId(ad.brand.id),
+          imageUrl: ad.brand.logoUrl,
+          name: ad.brand.name,
+        },
+      }),
+    );
+
+    return Maybe.some({ data: selectedAds, totalPages });
   }
 
   async findAdById({ id }: FindAdByIdProps): AsyncMaybe<AdvertisementEntity> {
