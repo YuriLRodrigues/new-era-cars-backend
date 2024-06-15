@@ -12,6 +12,7 @@ import {
 import { UserEntity } from '@root/domain/enterprise/entities/user.entity';
 
 export class InMemoryUserRepository implements UserRepository {
+  findAllSellCount: any;
   public users: UserEntity[] = [];
 
   async findByUsername({ username }: FindByUsernameProps): AsyncMaybe<UserEntity> {

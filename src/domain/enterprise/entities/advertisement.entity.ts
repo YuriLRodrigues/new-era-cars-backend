@@ -2,6 +2,16 @@ import { Entity } from '@root/core/domain/entity/entity';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { Optional } from '@root/core/logic/Optional';
 
+export enum FilterDate {
+  Desc = 'desc',
+  Asc = 'asc',
+}
+
+export enum Likes {
+  Desc = 'desc',
+  Asc = 'asc',
+}
+
 export enum Doors {
   Two = 'Two',
   Three = 'Three',

@@ -2,6 +2,7 @@ import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { ValueObject } from '@root/core/domain/value-object/value-object';
 
 import { Capacity, Doors, Fuel, GearBox } from '../entities/advertisement.entity';
+import { LikeEntity } from '../entities/like.entity';
 
 export type MinimalAdvertisementDetailsProps = {
   brand: {
@@ -18,6 +19,7 @@ export type MinimalAdvertisementDetailsProps = {
   doors: Doors;
   fuel: Fuel;
   gearBox: GearBox;
+  likes?: LikeEntity[];
 };
 
 export class MinimalAdvertisementDetails extends ValueObject<MinimalAdvertisementDetailsProps> {
@@ -59,6 +61,10 @@ export class MinimalAdvertisementDetails extends ValueObject<MinimalAdvertisemen
 
   get price() {
     return this.props.price;
+  }
+
+  get likes() {
+    return this.props.likes;
   }
 
   static create(props: MinimalAdvertisementDetailsProps) {

@@ -3,7 +3,6 @@ import {
   BrandRepository,
   CreateProps,
   DeleteProps,
-  FindAllProps,
   FindByIdProps,
   FindByNameProps,
   SaveProps,
@@ -39,8 +38,8 @@ export class InMemoryBrandRepository implements BrandRepository {
     return Maybe.some(brand);
   }
 
-  async findAll({ limit, page }: FindAllProps): AsyncMaybe<BrandEntity[]> {
-    const brands = await this.brands.slice((page - 1) * limit, limit * page);
+  async findAll(): AsyncMaybe<BrandEntity[]> {
+    const brands = await this.brands;
 
     return Maybe.some(brands);
   }

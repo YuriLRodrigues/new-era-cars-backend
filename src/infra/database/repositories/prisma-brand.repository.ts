@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { AsyncMaybe, Maybe } from '@root/core/logic/Maybe';
 import {
   BrandRepository,
   CreateProps,
   DeleteProps,
-  FindAllProps,
   FindByIdProps,
   FindByNameProps,
   SaveProps,
@@ -74,23 +72,10 @@ export class PrismaBrandRepository implements BrandRepository {
     return;
   }
 
-  async findAll({ limit, page }: FindAllProps): AsyncMaybe<BrandEntity[]> {
-    const brands = await this.prismaService.brand.findMany({
-      skip: page,
-      take: limit,
-    });
+  async findAll(): AsyncMaybe<BrandEntity[]> {
+    const brands = await this.prismaService.brand.findMany();
 
-    const mappedBrands = brands.map((brand) =>
-      BrandEntity.create(
-        {
-          logoUrl: brand.logoUrl,
-          name: brand.name,
-          createdAt: brand.createdAt,
-          updatedAt: brand.updatedAt,
-        },
-        new UniqueEntityId(brand.id),
-      ),
-    );
+    const mappedBrands = brands.map((brand) => BrandMappers.toDomain(brand));
 
     return Maybe.some(mappedBrands);
   }

@@ -59,6 +59,10 @@ import { PrismaUserRepository } from './repositories/prisma-user.repository';
       provide: LikeFeedbackRepository,
       useClass: PrismaLikeFeedbackRepository,
     },
+    {
+      provide: BrandRepository,
+      useClass: PrismaBrandRepository,
+    },
   ],
   exports: [
     PrismaService,
@@ -71,6 +75,7 @@ import { PrismaUserRepository } from './repositories/prisma-user.repository';
     FeedbackRepository,
     LikeFeedbackRepository,
     LikeAdvertisementRepository,
+    BrandRepository,
   ],
 })
 export class DatabaseModule {}

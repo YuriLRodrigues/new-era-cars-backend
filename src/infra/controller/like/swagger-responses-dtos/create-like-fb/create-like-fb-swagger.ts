@@ -1,11 +1,11 @@
-import { ApiBadRequestResponse, ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 
 import { CreateLikeFbResponsesSwagger } from '.';
 
 export function CreateLikeFbSwaggerDoc() {
   return function (target: any, key: any, descriptor: any) {
     ApiBearerAuth()(target, key, descriptor);
-    ApiOkResponse({
+    ApiCreatedResponse({
       status: 201,
       description: 'Like created successfully in feedback',
       type: CreateLikeFbResponsesSwagger[201],
