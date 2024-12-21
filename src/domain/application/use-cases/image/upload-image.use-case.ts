@@ -1,8 +1,10 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import { ImageEntity } from '@root/domain/enterprise/entities/image.entity';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
 
+import { ImageTypeError } from '../../errors/image-type-error';
 import { ImageRepository } from '../../repositories/image.repository';
 import { Uploader } from '../../repositories/uploader.repository';
 import { UserRepository } from '../../repositories/user.repository';
@@ -15,13 +17,11 @@ type ImageProps = {
 };
 
 type Input = {
-  image: ImageProps;
+  images: ImageProps[];
   userId: UniqueEntityId;
-  advertisementImageId?: UniqueEntityId;
-  advertisementThumbnailId?: UniqueEntityId;
 };
 
-type Output = Either<Error, ImageEntity>;
+type Output = Either<NotAllowedError | ImageTypeError, ImageEntity[]>;
 
 export class UploadImageUseCase {
   constructor(
@@ -30,29 +30,37 @@ export class UploadImageUseCase {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async execute({ image, userId, advertisementImageId, advertisementThumbnailId }: Input): Promise<Output> {
-    if (!/^(image\/(jpeg|png))$|^application\/pdf$/.test(image.fileType)) {
-      return left(new Error(`Invalid image type`));
-    }
-
+  async execute({ images, userId }: Input): Promise<Output> {
     const { isNone: userNotExists, value: user } = await this.userRepository.findById({
       id: userId,
     });
 
-    if (userNotExists() || user.roles.includes(UserRoles.Customer)) {
-      return left(new Error('You do not have permission to upload an image'));
+    if (userNotExists() || !user.roles.some((role) => role === UserRoles.Manager || role === UserRoles.Seller)) {
+      return left(new NotAllowedError());
     }
 
-    const imageUploaded = await this.uploader.uploadImage({ image });
+    const uploadedImages: ImageEntity[] = [];
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
 
-    const imageEntity = ImageEntity.create({
-      url: imageUploaded.url,
-      advertisementImageId,
-      advertisementThumbnailId,
-    });
+    for (const image of images) {
+      if (!/^(image\/(png|jpg|jpeg|webp))$/.test(image.fileType)) {
+        return left(new ImageTypeError(`Unsupported file type: ${image.fileType}`));
+      }
 
-    await this.imageRepository.create({ image: imageEntity });
+      if (image.fileSize > maxFileSize) {
+        return left(new ImageTypeError(`File size exceeds the maximum limit of 5MB: ${image.fileSize} bytes`));
+      }
 
-    return right(imageEntity);
+      const imageUploaded = await this.uploader.uploadImage({ image });
+
+      const imageEntity = ImageEntity.create({
+        url: imageUploaded.url,
+      });
+
+      await this.imageRepository.create({ image: imageEntity });
+      uploadedImages.push(imageEntity);
+    }
+
+    return right(uploadedImages);
   }
 }

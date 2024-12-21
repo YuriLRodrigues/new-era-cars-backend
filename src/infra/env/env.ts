@@ -5,6 +5,9 @@ export const envSchema = z.object({
   VERSION: z.string().default('1.0.0'),
   PORT: z.string().default('3333'),
 
+  ENDPOINT_UPLOAD: z.string(),
+  APP_URL_AUTOCARS: z.string(),
+  SENDGRID_API_KEY: z.string(),
   DATABASE_URL: z.string(),
 
   JWT_PRIVATE_KEY: z.string(),

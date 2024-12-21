@@ -3,7 +3,7 @@ import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { AdvertisementEntity, Capacity, Color, Doors, Fuel, GearBox, Model, SoldStatus } from './advertisement.entity';
 
 describe('Advertisement - Entity', () => {
-  it('should be able to create a ad with entity', () => {
+  it('should be able to create a ad as an entity', () => {
     const output = AdvertisementEntity.create({
       brandId: new UniqueEntityId(),
       capacity: Capacity.Two,

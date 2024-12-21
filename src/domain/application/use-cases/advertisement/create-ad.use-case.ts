@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import {
   AdvertisementEntity,
@@ -15,9 +17,10 @@ import { AdvertisementImage } from '@root/domain/enterprise/value-object/adverti
 
 import { AdvertisementImageRepository } from '../../repositories/advertisement-image.repository';
 import { AdvertisementRepository } from '../../repositories/advertisement.repository';
+import { ImageRepository } from '../../repositories/image.repository';
 import { UserRepository } from '../../repositories/user.repository';
 
-type Output = Either<Error, AdvertisementEntity>;
+type Output = Either<ResourceNotFoundError | NotAllowedError, AdvertisementEntity>;
 
 type Input = {
   imagesIds: UniqueEntityId[];
@@ -33,7 +36,7 @@ type Input = {
   model: Model;
   phone: string;
   price: number;
-  thumbnailUrl: string;
+  thumbnailImageId: UniqueEntityId;
   title: string;
   userId: UniqueEntityId;
   year: number;
@@ -46,6 +49,7 @@ export class CreateAdUseCase {
     private readonly advertisementRepository: AdvertisementRepository,
     private readonly advertisementImageRepository: AdvertisementImageRepository,
     private readonly userRepository: UserRepository,
+    private readonly imageRepository: ImageRepository,
   ) {}
 
   async execute(data: Input): Promise<Output> {
@@ -54,11 +58,19 @@ export class CreateAdUseCase {
     });
 
     if (userNotExists()) {
-      return left(new Error('User not found'));
+      return left(new ResourceNotFoundError());
     }
 
     if (user.roles.includes(UserRoles.Customer)) {
-      return left(new Error('You do not have permission to create an ad'));
+      return left(new NotAllowedError());
+    }
+
+    const { value: thubnailImage, isNone: thubnailImageNotFound } = await this.imageRepository.findById({
+      id: data.thumbnailImageId, // todo image id - concertar o thubnail id (ligação do prisma ad thumb)
+    });
+
+    if (thubnailImageNotFound()) {
+      return left(new ResourceNotFoundError());
     }
 
     const advertisement = AdvertisementEntity.create({
@@ -74,7 +86,7 @@ export class CreateAdUseCase {
       model: data.model,
       phone: data.phone,
       price: data.price,
-      thumbnailUrl: data.thumbnailUrl,
+      thumbnailUrl: thubnailImage.url,
       title: data.title,
       userId: data.userId,
       year: data.year,

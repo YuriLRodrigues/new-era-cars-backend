@@ -1,4 +1,5 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { PaginatedResult } from '@root/core/dto/paginated-result';
 import { AsyncMaybe } from '@root/core/logic/Maybe';
 import { FeedbackEntity } from '@root/domain/enterprise/entities/feedback.entity';
 import { FeedbackDetails } from '@root/domain/enterprise/value-object/feedback-details';
@@ -33,6 +34,6 @@ export abstract class FeedbackRepository {
     advertisementId,
     page,
     limit,
-  }: FindAllByAdvertisementIdProps): AsyncMaybe<FeedbackDetails[]>;
+  }: FindAllByAdvertisementIdProps): AsyncMaybe<PaginatedResult<FeedbackDetails[]>>;
   abstract findById({ feedbackId }: FindByIdProps): AsyncMaybe<FeedbackEntity>;
 }

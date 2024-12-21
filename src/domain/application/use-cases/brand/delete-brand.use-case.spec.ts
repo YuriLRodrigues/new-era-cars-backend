@@ -1,20 +1,33 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
 import { makeFakeBrand } from 'test/factory/make-fake-brand';
 import { makeFakeUser } from 'test/factory/make-fake-user';
+import { InMemoryAdvertisementRepository } from 'test/repositories/in-memory-advertisement-repository';
 import { InMemoryBrandRepository } from 'test/repositories/in-memory-brand-repository';
+import { InMemoryLikeAdvertisementRepository } from 'test/repositories/in-memory-like-advertisement-repository';
 import { InMemoryUserRepository } from 'test/repositories/in-memory-user-repository';
 
 import { DeleteBrandUseCase } from './delete-brand.use-case';
 
 describe('Delete Brand - Use Case', () => {
   let sut: DeleteBrandUseCase;
+  let inMemoryAdRepository: InMemoryAdvertisementRepository;
+
   let inMemoryBrandRepository: InMemoryBrandRepository;
   let inMemoryUserRepository: InMemoryUserRepository;
+  let inMemoryLikeRepository: InMemoryLikeAdvertisementRepository;
 
   beforeEach(() => {
     inMemoryBrandRepository = new InMemoryBrandRepository();
-    inMemoryUserRepository = new InMemoryUserRepository();
+    inMemoryUserRepository = new InMemoryUserRepository(inMemoryAdRepository);
+    inMemoryLikeRepository = new InMemoryLikeAdvertisementRepository();
+    inMemoryAdRepository = new InMemoryAdvertisementRepository(
+      inMemoryBrandRepository,
+      inMemoryLikeRepository,
+      inMemoryUserRepository,
+    );
     sut = new DeleteBrandUseCase(inMemoryBrandRepository, inMemoryUserRepository);
   });
 
@@ -47,7 +60,7 @@ describe('Delete Brand - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('Brand not found'));
+    expect(output.value).toBeInstanceOf(ResourceNotFoundError);
     expect(inMemoryBrandRepository.brands).toHaveLength(1);
   });
 
@@ -64,7 +77,7 @@ describe('Delete Brand - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('You do not have permission to delete this brand'));
+    expect(output.value).toBeInstanceOf(NotAllowedError);
     expect(inMemoryBrandRepository.brands).toHaveLength(1);
   });
 });

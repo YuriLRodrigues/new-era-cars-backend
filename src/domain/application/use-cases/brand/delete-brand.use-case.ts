@@ -1,4 +1,6 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
 
@@ -10,7 +12,7 @@ type Input = {
   userId: UniqueEntityId;
 };
 
-type Output = Either<Error, void>;
+type Output = Either<NotAllowedError | ResourceNotFoundError, void>;
 
 export class DeleteBrandUseCase {
   constructor(
@@ -22,13 +24,13 @@ export class DeleteBrandUseCase {
     const { isNone: userNotExists, value: user } = await this.userRepository.findById({ id: userId });
 
     if (userNotExists() || !user.roles.includes(UserRoles.Manager)) {
-      return left(new Error('You do not have permission to delete this brand'));
+      return left(new NotAllowedError());
     }
 
     const { isNone: brandNotExists, value: brand } = await this.brandRepository.findById({ id });
 
     if (brandNotExists()) {
-      return left(new Error('Brand not found'));
+      return left(new ResourceNotFoundError());
     }
 
     await this.brandRepository.delete({ brandId: brand.id });

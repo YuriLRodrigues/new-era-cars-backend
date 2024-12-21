@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
 
 import { UserRepository } from '../../repositories/user.repository';
 
-type Output = Either<Error, void>;
+type Output = Either<ResourceNotFoundError, void>;
 
 type Input = {
   id: UniqueEntityId;
@@ -18,7 +19,7 @@ export class DeleteOwnUserUseCase {
     const { isNone: userNotFound, value: userExists } = await this.userRepository.findById({ id });
 
     if (userNotFound()) {
-      return left(new Error('User not found'));
+      return left(new ResourceNotFoundError());
     }
 
     await this.userRepository.delete({ userId: userExists.id });

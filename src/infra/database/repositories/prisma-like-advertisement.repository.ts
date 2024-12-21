@@ -23,10 +23,11 @@ export class PrismaLikeAdvertisementRepository implements LikeAdvertisementRepos
     return Maybe.some(like);
   }
 
-  async findById({ advertisementId }: FindByIdProps): AsyncMaybe<LikeEntity> {
+  async findById({ advertisementId, userId }: FindByIdProps): AsyncMaybe<LikeEntity> {
     const like = await this.prismaService.like.findFirst({
       where: {
         advertisementId: advertisementId.toValue(),
+        userId: userId.toValue(),
       },
     });
 
@@ -59,14 +60,14 @@ export class PrismaLikeAdvertisementRepository implements LikeAdvertisementRepos
     return Maybe.some(mappedLikes);
   }
 
-  async findAllLikes({ advertisementId }: FindAllProps): AsyncMaybe<number> {
-    const likes = await this.prismaService.like.count({
+  async countLikes({ advertisementId }: FindAllProps): AsyncMaybe<number> {
+    const likesCount = await this.prismaService.like.count({
       where: {
         advertisementId: advertisementId.toValue(),
       },
     });
 
-    return Maybe.some(likes);
+    return Maybe.some(likesCount);
   }
 
   async delete({ likeId }: DeleteProps): AsyncMaybe<void> {

@@ -1,16 +1,39 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
 import { makeFakeUser } from 'test/factory/make-fake-user';
+import { InMemoryAddressRepository } from 'test/repositories/in-memory-address-repository';
+import { InMemoryAdvertisementRepository } from 'test/repositories/in-memory-advertisement-repository';
+import { InMemoryBrandRepository } from 'test/repositories/in-memory-brand-repository';
+import { InMemoryImageRepository } from 'test/repositories/in-memory-image-repository';
+import { InMemoryLikeAdvertisementRepository } from 'test/repositories/in-memory-like-advertisement-repository';
 import { InMemoryUserRepository } from 'test/repositories/in-memory-user-repository';
 
 import { DeleteUserUseCase } from './delete-user.use-case';
 
 describe('Delete User - Use Case', () => {
-  let inMemoryUserRepository: InMemoryUserRepository;
   let sut: DeleteUserUseCase;
+  let inMemoryBrandRepository: InMemoryBrandRepository;
+  let inMemoryAdvertisementRepository: InMemoryAdvertisementRepository;
+  let inMemoryUserRepository: InMemoryUserRepository;
+  let inMemoryLikeAdvertisementRepository: InMemoryLikeAdvertisementRepository;
+  let inMemoryImageRepository: InMemoryImageRepository;
+  let inMemoryAddressRepository: InMemoryAddressRepository;
 
   beforeEach(() => {
-    inMemoryUserRepository = new InMemoryUserRepository();
+    inMemoryBrandRepository = new InMemoryBrandRepository();
+    inMemoryImageRepository = new InMemoryImageRepository();
+    inMemoryAddressRepository = new InMemoryAddressRepository();
+    inMemoryUserRepository = new InMemoryUserRepository(inMemoryAdvertisementRepository);
+    inMemoryLikeAdvertisementRepository = new InMemoryLikeAdvertisementRepository();
+    inMemoryAdvertisementRepository = new InMemoryAdvertisementRepository(
+      inMemoryBrandRepository,
+      inMemoryLikeAdvertisementRepository,
+      inMemoryUserRepository,
+      inMemoryImageRepository,
+      inMemoryAddressRepository,
+    );
     sut = new DeleteUserUseCase(inMemoryUserRepository);
   });
 
@@ -44,7 +67,7 @@ describe('Delete User - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('Invalid permission to delete an user'));
+    expect(output.value).toBeInstanceOf(NotAllowedError);
     expect(inMemoryUserRepository.users).toHaveLength(2);
   });
 
@@ -61,7 +84,7 @@ describe('Delete User - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('User not found'));
+    expect(output.value).toBeInstanceOf(ResourceNotFoundError);
     expect(inMemoryUserRepository.users).toHaveLength(2);
   });
 });

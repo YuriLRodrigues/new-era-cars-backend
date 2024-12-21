@@ -17,8 +17,8 @@ export class InMemoryLikeFeedbackRepository implements LikeFeedbackRepository {
     return Maybe.some(like);
   }
 
-  async findById({ feedbackId }: FindByIdProps): AsyncMaybe<LikeEntity> {
-    const like = this.feedbackLikes.find((like) => like.feedbackId.equals(feedbackId)); // kalil validar o ad id tbm ?
+  async findById({ feedbackId, userId }: FindByIdProps): AsyncMaybe<LikeEntity> {
+    const like = this.feedbackLikes.find((like) => like.feedbackId.equals(feedbackId) && like.userId.equals(userId));
 
     if (!like) {
       return Maybe.none();

@@ -1,3 +1,4 @@
+import { PaginatedResult } from '@root/core/dto/paginated-result';
 import { AsyncMaybe, Maybe } from '@root/core/logic/Maybe';
 import {
   CreateProps,
@@ -40,7 +41,7 @@ export class InMemoryFeedbackRepository implements FeedbackRepository {
     advertisementId,
     page,
     limit,
-  }: FindAllByAdvertisementIdProps): AsyncMaybe<FeedbackDetails[]> {
+  }: FindAllByAdvertisementIdProps): AsyncMaybe<PaginatedResult<FeedbackDetails[]>> {
     const feedbacks = this.feedbacks.filter((fb) => fb.advertisementId.equals(advertisementId));
 
     const feedbackDetails = feedbacks.map((fb) => {
@@ -62,7 +63,15 @@ export class InMemoryFeedbackRepository implements FeedbackRepository {
 
     const limitedFeedbacks = feedbackDetails.slice((page - 1) * limit, limit * page);
 
-    return Maybe.some(limitedFeedbacks);
+    return Maybe.some({
+      data: limitedFeedbacks,
+      meta: {
+        page,
+        perPage: limit,
+        totalCount: feedbackDetails.length,
+        totalPages: Math.ceil(feedbackDetails.length / limit),
+      },
+    });
   }
 
   async save({ feedback }: SaveProps): AsyncMaybe<void> {

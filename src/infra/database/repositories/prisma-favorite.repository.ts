@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { PaginatedResult } from '@root/core/dto/paginated-result';
 import { AsyncMaybe, Maybe } from '@root/core/logic/Maybe';
 import {
   CreateProps,
@@ -9,7 +10,7 @@ import {
   FindAllProps,
   FindByUserIdProps,
 } from '@root/domain/application/repositories/favorite.repository';
-import { Capacity, Doors, Fuel, GearBox } from '@root/domain/enterprise/entities/advertisement.entity';
+import { Capacity, Doors, Fuel, GearBox, SoldStatus } from '@root/domain/enterprise/entities/advertisement.entity';
 import { FavoriteEntity } from '@root/domain/enterprise/entities/favorite.entity';
 import { FavoriteAdminDetails } from '@root/domain/enterprise/value-object/favorite-admin-details';
 import { FavoriteDetails } from '@root/domain/enterprise/value-object/favorite-details';
@@ -31,28 +32,33 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
     return Maybe.some(favorite);
   }
 
-  async findAll({ limit, page }: FindAllProps): AsyncMaybe<FavoriteAdminDetails[]> {
+  async findAll({ limit, page }: FindAllProps): AsyncMaybe<PaginatedResult<FavoriteAdminDetails[]>> {
+    const totalCountAdsDistinct = await this.prismaService.favorite.groupBy({
+      by: ['advertisementId'],
+      _count: {
+        advertisementId: true,
+      },
+    });
+
     const favorites = await this.prismaService.favorite.findMany({
-      skip: page,
+      skip: (page - 1) * limit,
       take: limit,
-      select: {
-        id: true,
-        createdAt: true,
+      distinct: ['advertisementId'],
+      include: {
         advertisement: {
           select: {
             id: true,
-            title: true,
-            thumbnailUrl: true,
             price: true,
+            thumbnailUrl: true,
+            title: true,
             soldStatus: true,
-            favorites: true,
           },
         },
         user: {
           select: {
+            avatar: true,
             id: true,
             name: true,
-            avatar: true,
           },
         },
       },
@@ -60,52 +66,69 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
 
     const mappedFavorites = favorites.map((fav) =>
       FavoriteAdminDetails.create({
-        id: new UniqueEntityId(fav.id),
         advertisement: {
           id: new UniqueEntityId(fav.advertisement.id),
           price: fav.advertisement.price,
           thumbnailUrl: fav.advertisement.thumbnailUrl,
           title: fav.advertisement.title,
-          status: fav.advertisement.soldStatus,
+          status: SoldStatus[fav.advertisement.soldStatus],
         },
         user: {
           avatar: fav.user.avatar,
           id: new UniqueEntityId(fav.user.id),
           name: fav.user.name,
         },
-        favorites: fav.advertisement.favorites.length,
+        id: new UniqueEntityId(fav.id),
+        favoritesCount: totalCountAdsDistinct.find((t) => t.advertisementId === fav.advertisementId)?._count
+          .advertisementId,
         createdAt: fav.createdAt,
       }),
     );
 
-    return Maybe.some(mappedFavorites);
-  }
-
-  async findAllByUserId({ limit, page, userId }: FindAllByUserIdProps): AsyncMaybe<FavoriteDetails[]> {
-    const favorites = await this.prismaService.favorite.findMany({
-      where: {
-        userId: userId.toValue(),
-      },
-      skip: page,
-      take: limit,
-
-      select: {
-        id: true,
-        advertisement: {
-          select: {
-            doors: true,
-            gearBox: true,
-            fuel: true,
-            km: true,
-            capacity: true,
-            title: true,
-            price: true,
-            thumbnailUrl: true,
-            id: true,
-          },
-        },
+    return Maybe.some({
+      data: mappedFavorites,
+      meta: {
+        page,
+        perPage: limit,
+        totalPages: Math.ceil(totalCountAdsDistinct.length / limit),
+        totalCount: totalCountAdsDistinct.length,
       },
     });
+  }
+
+  async findAllByUserId({ limit, page, userId }: FindAllByUserIdProps): AsyncMaybe<PaginatedResult<FavoriteDetails[]>> {
+    const [favorites, count] = await this.prismaService.$transaction([
+      this.prismaService.favorite.findMany({
+        where: {
+          userId: userId.toValue(),
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+
+        select: {
+          id: true,
+          advertisement: {
+            select: {
+              doors: true,
+              gearBox: true,
+              fuel: true,
+              km: true,
+              capacity: true,
+              title: true,
+              price: true,
+              thumbnailUrl: true,
+              id: true,
+              soldStatus: true,
+            },
+          },
+        },
+      }),
+      this.prismaService.favorite.count({
+        where: {
+          userId: userId.toValue(),
+        },
+      }),
+    ]);
 
     const mappedFavorites = favorites.map((fav) =>
       FavoriteDetails.create({
@@ -120,11 +143,20 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
           fuel: Fuel[fav.advertisement.fuel],
           gearBox: GearBox[fav.advertisement.gearBox],
           km: fav.advertisement.km,
+          soldStatus: SoldStatus[fav.advertisement.soldStatus],
         },
       }),
     );
 
-    return Maybe.some(mappedFavorites);
+    return Maybe.some({
+      data: mappedFavorites,
+      meta: {
+        page: page,
+        perPage: limit,
+        totalPages: Math.ceil(count / limit),
+        totalCount: count,
+      },
+    });
   }
 
   async findByUserId({ advertisementId, userId }: FindByUserIdProps): AsyncMaybe<FavoriteEntity> {
@@ -136,10 +168,27 @@ export class PrismaFavoriteRepository implements FavoriteRepository {
     });
 
     if (!favorite) {
-      return null;
+      return Maybe.none();
     }
 
     return Maybe.some(FavoriteMappers.toDomain(favorite));
+  }
+
+  async findDistinctCount(): AsyncMaybe<number> {
+    const totalCountFavoriteAdsDistinct = await this.prismaService.favorite.groupBy({
+      by: ['advertisementId'],
+      _count: {
+        advertisementId: true,
+      },
+    });
+
+    return Maybe.some(totalCountFavoriteAdsDistinct.length);
+  }
+
+  async findTotalCount(): AsyncMaybe<number> {
+    const totalCountFavoriteAds = await this.prismaService.favorite.count();
+
+    return Maybe.some(totalCountFavoriteAds);
   }
 
   async delete({ userId, favoriteId }: DeleteProps): AsyncMaybe<void> {

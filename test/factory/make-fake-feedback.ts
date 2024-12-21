@@ -9,6 +9,7 @@ export const makeFakeFeedback = (data = {} as Overwrides, id?: UniqueEntityId) =
   const comment = faker.lorem.text();
   const stars = faker.number.int({ max: 5, min: 0 });
   const userId = new UniqueEntityId();
+  const title = faker.lorem.words();
   const createdAt = new Date();
   const updatedAt = new Date();
 
@@ -16,6 +17,7 @@ export const makeFakeFeedback = (data = {} as Overwrides, id?: UniqueEntityId) =
     {
       advertisementId: data.advertisementId || advertisementId,
       comment: data.comment || comment,
+      title: data.title || title,
       stars: data.stars || stars,
       userId: data.userId || userId,
       createdAt: data.createdAt || createdAt,

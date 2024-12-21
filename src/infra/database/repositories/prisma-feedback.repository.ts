@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { PaginatedResult } from '@root/core/dto/paginated-result';
 import { AsyncMaybe, Maybe } from '@root/core/logic/Maybe';
 import {
   CreateProps,
@@ -46,27 +47,34 @@ export class PrismaFeedbackRepository implements FeedbackRepository {
     advertisementId,
     page,
     limit,
-  }: FindAllByAdvertisementIdProps): AsyncMaybe<FeedbackDetails[]> {
-    const feedbacksByAd = await this.prismaService.feedback.findMany({
-      where: {
-        advertisementId: advertisementId.toValue(),
-      },
-      select: {
-        likes: true,
-        id: true,
-        comment: true,
-        stars: true,
-        user: {
-          select: {
-            name: true,
-            id: true,
-          },
+  }: FindAllByAdvertisementIdProps): AsyncMaybe<PaginatedResult<FeedbackDetails[]>> {
+    const [feedbacksByAd, count] = await this.prismaService.$transaction([
+      this.prismaService.feedback.findMany({
+        where: {
+          advertisementId: advertisementId.toValue(),
         },
-        createdAt: true,
-      },
-      skip: page,
-      take: limit,
-    });
+        select: {
+          likes: true,
+          id: true,
+          comment: true,
+          stars: true,
+          user: {
+            select: {
+              name: true,
+              id: true,
+            },
+          },
+          createdAt: true,
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prismaService.feedback.count({
+        where: {
+          advertisementId: advertisementId.toValue(),
+        },
+      }),
+    ]);
 
     const mappedFeedbacks = feedbacksByAd.map((fb) =>
       FeedbackDetails.create({
@@ -89,7 +97,15 @@ export class PrismaFeedbackRepository implements FeedbackRepository {
       }),
     );
 
-    return Maybe.some(mappedFeedbacks);
+    return Maybe.some({
+      data: mappedFeedbacks,
+      meta: {
+        page,
+        perPage: limit,
+        totalPages: Math.ceil(count / limit),
+        totalCount: count,
+      },
+    });
   }
 
   async save({ feedback }: SaveProps): AsyncMaybe<void> {

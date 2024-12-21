@@ -1,9 +1,11 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { makeFakeAdvertisement } from 'test/factory/make-fake-advertisement';
 import { makeFakeUser } from 'test/factory/make-fake-user';
 import { InMemoryAdvertisementRepository } from 'test/repositories/in-memory-advertisement-repository';
 import { InMemoryBrandRepository } from 'test/repositories/in-memory-brand-repository';
 import { InMemoryFeedbackRepository } from 'test/repositories/in-memory-feedback-repository';
+import { InMemoryLikeAdvertisementRepository } from 'test/repositories/in-memory-like-advertisement-repository';
 import { InMemoryLikeFeedbackRepository } from 'test/repositories/in-memory-like-feedback-repository';
 import { InMemoryUserRepository } from 'test/repositories/in-memory-user-repository';
 
@@ -14,16 +16,26 @@ describe('Create Feedback - Use Case', () => {
   let inMemoryAdvertisementRepository: InMemoryAdvertisementRepository;
   let inMemoryUserRepository: InMemoryUserRepository;
   let inMemoryLikeFeedbackRepository: InMemoryLikeFeedbackRepository;
+  let inMemoryLikeAdvertisementRepository: InMemoryLikeAdvertisementRepository;
   let inMemoryBrandRepository: InMemoryBrandRepository;
   let sut: CreateFeedbackUseCase;
 
   beforeEach(() => {
     inMemoryBrandRepository = new InMemoryBrandRepository();
-    inMemoryUserRepository = new InMemoryUserRepository();
+    inMemoryUserRepository = new InMemoryUserRepository(inMemoryAdvertisementRepository);
     inMemoryLikeFeedbackRepository = new InMemoryLikeFeedbackRepository();
+    inMemoryLikeAdvertisementRepository = new InMemoryLikeAdvertisementRepository();
     inMemoryFeedbackRepository = new InMemoryFeedbackRepository(inMemoryUserRepository, inMemoryLikeFeedbackRepository);
-    inMemoryAdvertisementRepository = new InMemoryAdvertisementRepository(inMemoryBrandRepository);
-    sut = new CreateFeedbackUseCase(inMemoryFeedbackRepository, inMemoryAdvertisementRepository); // kalil qnt de in memory dependente
+    inMemoryAdvertisementRepository = new InMemoryAdvertisementRepository(
+      inMemoryBrandRepository,
+      inMemoryLikeAdvertisementRepository,
+      inMemoryUserRepository,
+    );
+    sut = new CreateFeedbackUseCase(
+      inMemoryFeedbackRepository,
+      inMemoryAdvertisementRepository,
+      inMemoryUserRepository,
+    );
   });
 
   it('should be able top create a new feedback in any ', async () => {
@@ -38,6 +50,7 @@ describe('Create Feedback - Use Case', () => {
       comment: 'New Comment',
       stars: 5,
       userId: user.id,
+      title: 'Title test',
     });
 
     expect(output.isRight()).toBe(true);
@@ -48,6 +61,7 @@ describe('Create Feedback - Use Case', () => {
         comment: 'New Comment',
         stars: 5,
         userId: user.id,
+        title: 'Title test',
       }),
     );
   });
@@ -61,10 +75,11 @@ describe('Create Feedback - Use Case', () => {
       comment: 'New Comment',
       stars: 5,
       userId: user.id,
+      title: 'Title test',
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('Advertisement not found'));
+    expect(output.value).toBeInstanceOf(ResourceNotFoundError);
     expect(inMemoryFeedbackRepository.feedbacks).toHaveLength(0);
   });
 });

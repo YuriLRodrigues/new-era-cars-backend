@@ -1,0 +1,47 @@
+import { Injectable } from '@nestjs/common';
+import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
+import { Either, left, right } from '@root/core/logic/Either';
+import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
+
+import { AdvertisementRepository } from '../../repositories/advertisement.repository';
+import { UserRepository } from '../../repositories/user.repository';
+
+type Output = Either<
+  ResourceNotFoundError | NotAllowedError,
+  {
+    price: number;
+    createdAt: Date;
+  }[]
+>;
+
+type Input = {
+  referenceDate: number;
+  userId: UniqueEntityId;
+};
+
+@Injectable()
+export class FindAllSoldsAdsUseCase {
+  constructor(
+    private readonly advertisementRepository: AdvertisementRepository,
+    private readonly userRepository: UserRepository,
+  ) {}
+
+  async execute({ referenceDate, userId }: Input): Promise<Output> {
+    const { isNone: userNotFound, value: user } = await this.userRepository.findById({ id: userId });
+
+    if (userNotFound()) return left(new ResourceNotFoundError());
+
+    if (!user.roles.some((role) => role === UserRoles.Seller || role === UserRoles.Manager)) {
+      return left(new NotAllowedError());
+    }
+
+    const { value: advertisements } = await this.advertisementRepository.findAllSoldAds({
+      referenceDate,
+      userId,
+    });
+
+    return right(advertisements);
+  }
+}

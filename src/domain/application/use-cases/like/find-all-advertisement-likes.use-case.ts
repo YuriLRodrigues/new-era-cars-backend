@@ -1,4 +1,5 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
 
 import { AdvertisementRepository } from '../../repositories/advertisement.repository';
@@ -8,7 +9,7 @@ type Input = {
   advertisementId: UniqueEntityId;
 };
 
-type Output = Either<Error, number>;
+type Output = Either<ResourceNotFoundError, number>;
 
 export class FindAllAdvertisementLikesUseCase {
   constructor(
@@ -20,10 +21,10 @@ export class FindAllAdvertisementLikesUseCase {
     const { isNone: advertisementNotExists } = await this.advertisementRepository.findAdById({ id: advertisementId });
 
     if (advertisementNotExists()) {
-      return left(new Error('Advertisement not found'));
+      return left(new ResourceNotFoundError());
     }
 
-    const { value: allLikes } = await this.likeAdvertisementRepository.findAllLikes({ advertisementId });
+    const { value: allLikes } = await this.likeAdvertisementRepository.countLikes({ advertisementId });
 
     return right(allLikes);
   }

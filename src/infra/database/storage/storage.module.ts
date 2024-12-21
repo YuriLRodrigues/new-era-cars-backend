@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { Uploader } from '@root/domain/application/repositories/uploader.repository';
 
-import { R2Storage } from './r2.storage';
+import { MinioStorage } from './minio.storage';
 
 @Module({
-  providers: [{ provide: Uploader, useClass: R2Storage }],
+  providers: [{ provide: Uploader, useClass: MinioStorage }],
   exports: [Uploader],
 })
 export class StorageModule {}

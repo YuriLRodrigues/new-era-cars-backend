@@ -17,8 +17,10 @@ export class InMemoryLikeAdvertisementRepository implements LikeAdvertisementRep
     return Maybe.some(like);
   }
 
-  async findById({ advertisementId }: FindByIdProps): AsyncMaybe<LikeEntity> {
-    const like = this.advertisementLikes.find((like) => like.advertisementId.equals(advertisementId));
+  async findById({ advertisementId, userId }: FindByIdProps): AsyncMaybe<LikeEntity> {
+    const like = this.advertisementLikes.find(
+      (like) => like.advertisementId.equals(advertisementId) && like.userId.equals(userId),
+    );
 
     if (!like) {
       return Maybe.none();
@@ -37,6 +39,14 @@ export class InMemoryLikeAdvertisementRepository implements LikeAdvertisementRep
     const likes = this.advertisementLikes.filter((like) => like.advertisementId.equals(advertisementId));
 
     return Maybe.some(likes.length);
+  }
+
+  async countLikes({ advertisementId }: FindAllProps): AsyncMaybe<number> {
+    const likes = await this.advertisementLikes.filter(
+      (ad) => ad.advertisementId.toValue() === advertisementId.toValue(),
+    ).length;
+
+    return Maybe.some(likes);
   }
 
   async delete({ likeId }: DeleteProps): AsyncMaybe<void> {

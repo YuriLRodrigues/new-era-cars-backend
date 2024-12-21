@@ -1,9 +1,14 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
 import { makeFakeAdvertisement } from 'test/factory/make-fake-advertisement';
 import { makeFakeUser } from 'test/factory/make-fake-user';
+import { InMemoryAddressRepository } from 'test/repositories/in-memory-address-repository';
 import { InMemoryAdvertisementRepository } from 'test/repositories/in-memory-advertisement-repository';
 import { InMemoryBrandRepository } from 'test/repositories/in-memory-brand-repository';
+import { InMemoryImageRepository } from 'test/repositories/in-memory-image-repository';
+import { InMemoryLikeAdvertisementRepository } from 'test/repositories/in-memory-like-advertisement-repository';
 import { InMemoryUserRepository } from 'test/repositories/in-memory-user-repository';
 
 import { DeleteAdUseCase } from './delete-ad.use-case';
@@ -13,10 +18,23 @@ describe('Delete Advertisement - Use Case', () => {
   let inMemoryAdRepository: InMemoryAdvertisementRepository;
   let inMemoryUserRepository: InMemoryUserRepository;
   let inMemoryBrandRepository: InMemoryBrandRepository;
+  let inMemoryLikeAdvertisementRepository: InMemoryLikeAdvertisementRepository;
+  let inMemoryImageRepository: InMemoryImageRepository;
+  let inMemoryAddressRepository: InMemoryAddressRepository;
 
   beforeEach(() => {
-    inMemoryAdRepository = new InMemoryAdvertisementRepository(inMemoryBrandRepository);
-    inMemoryUserRepository = new InMemoryUserRepository();
+    inMemoryUserRepository = new InMemoryUserRepository(inMemoryAdRepository);
+    inMemoryBrandRepository = new InMemoryBrandRepository();
+    inMemoryImageRepository = new InMemoryImageRepository();
+    inMemoryAddressRepository = new InMemoryAddressRepository();
+    inMemoryLikeAdvertisementRepository = new InMemoryLikeAdvertisementRepository();
+    inMemoryAdRepository = new InMemoryAdvertisementRepository(
+      inMemoryBrandRepository,
+      inMemoryLikeAdvertisementRepository,
+      inMemoryUserRepository,
+      inMemoryImageRepository,
+      inMemoryAddressRepository,
+    );
     sut = new DeleteAdUseCase(inMemoryAdRepository, inMemoryUserRepository);
   });
 
@@ -38,7 +56,7 @@ describe('Delete Advertisement - Use Case', () => {
   });
 
   it('should not be possible to delete an ad if you are not the owner or manager', async () => {
-    const user = makeFakeUser();
+    const user = makeFakeUser({ roles: [UserRoles.Customer] });
     inMemoryUserRepository.register({ user });
 
     const advertisement = makeFakeAdvertisement();
@@ -50,7 +68,7 @@ describe('Delete Advertisement - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('You do not have permission to delete this ad'));
+    expect(output.value).toBeInstanceOf(NotAllowedError);
   });
 
   it('should not be possible to delete an ad if user id is invalid (non-existent)', async () => {
@@ -63,7 +81,7 @@ describe('Delete Advertisement - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('User not found'));
+    expect(output.value).toBeInstanceOf(ResourceNotFoundError);
   });
 
   it('should not be possible to delete an ad if advertisementId is invalid (non-existent)', async () => {
@@ -76,6 +94,6 @@ describe('Delete Advertisement - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('Advertisement not found'));
+    expect(output.value).toBeInstanceOf(ResourceNotFoundError);
   });
 });

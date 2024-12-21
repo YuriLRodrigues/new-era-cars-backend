@@ -1,25 +1,27 @@
 import { Injectable } from '@nestjs/common';
+import { PaginatedResult } from '@root/core/dto/paginated-result';
 import { Either, right } from '@root/core/logic/Either';
-import { QueryDataDTO } from '@root/infra/controller/advertisemet/dto/query-data.dto';
+import { MinimalAdvertisementDetails } from '@root/domain/enterprise/value-object/minimal-advertisement-details';
 
-import { AdvertisementRepository, FindAllAdvertisementsProps } from '../../repositories/advertisement.repository';
+import { AdvertisementRepository, FindAllAdsProps } from '../../repositories/advertisement.repository';
 
-type Output = Either<Error, FindAllAdvertisementsProps>;
+type Output = Either<Error, PaginatedResult<MinimalAdvertisementDetails[]>>;
 
 type Input = {
   page: number;
   limit: number;
-  search?: QueryDataDTO;
+  search?: FindAllAdsProps['search'];
 };
 
 @Injectable()
 export class FindAllAdsUseCase {
   constructor(private readonly advertisementRepository: AdvertisementRepository) {}
 
-  async execute({ limit, page }: Input): Promise<Output> {
+  async execute({ limit, page, search }: Input): Promise<Output> {
     const { value: advertisements } = await this.advertisementRepository.findAllAds({
       limit,
       page,
+      search,
     });
 
     return right(advertisements);

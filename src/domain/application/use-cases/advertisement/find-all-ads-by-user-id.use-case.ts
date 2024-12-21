@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { PaginatedResult } from '@root/core/dto/paginated-result';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
+import { UserAdvertisements } from '@root/domain/enterprise/value-object/user-advertisements';
 
-import { AdvertisementRepository, FindAllAdvertisementsProps } from '../../repositories/advertisement.repository';
+import { AdvertisementRepository } from '../../repositories/advertisement.repository';
 import { UserRepository } from '../../repositories/user.repository';
 
-type Output = Either<Error, FindAllAdvertisementsProps>;
+type Output = Either<ResourceNotFoundError, PaginatedResult<UserAdvertisements[]>>;
 
 type Input = {
   userId: UniqueEntityId;
@@ -24,15 +27,15 @@ export class FindAllAdsByUserIdUseCase {
     const { isNone, value: user } = await this.userRepository.findById({ id: userId });
 
     if (isNone()) {
-      return left(new Error('User not found'));
+      return left(new ResourceNotFoundError());
     }
 
-    const { value: advertisement } = await this.advertisementRepository.findAllAdsByUserId({
+    const { value: advertisements } = await this.advertisementRepository.findAllAdsByUserId({
       userId: user.id,
       limit,
       page,
     });
 
-    return right(advertisement);
+    return right(advertisements);
   }
 }

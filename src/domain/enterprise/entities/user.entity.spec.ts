@@ -3,7 +3,7 @@ import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { UserEntity, UserRoles } from './user.entity';
 
 describe('User - Entity', () => {
-  it('should be able to create a user with entity', () => {
+  it('should be able to create a user as an entity', () => {
     const output = UserEntity.create({
       avatar: 'Avatar 1',
       username: 'john',

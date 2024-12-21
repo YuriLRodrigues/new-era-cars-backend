@@ -12,6 +12,7 @@ export type DeleteProps = {
 
 export type FindByIdProps = {
   feedbackId: UniqueEntityId;
+  userId: UniqueEntityId;
 };
 
 export type FindAllProps = {
@@ -24,7 +25,7 @@ export type SaveProps = {
 
 export abstract class LikeFeedbackRepository {
   abstract create({ like }: CreateProps): AsyncMaybe<LikeEntity>;
-  abstract findById({ feedbackId }: FindByIdProps): AsyncMaybe<LikeEntity>;
+  abstract findById({ feedbackId, userId }: FindByIdProps): AsyncMaybe<LikeEntity>;
   abstract findAll({ feedbackId }: FindAllProps): AsyncMaybe<LikeEntity[]>;
   abstract findAllLikes({ feedbackId }: FindAllProps): AsyncMaybe<number>;
   abstract delete({ likeId }: DeleteProps): AsyncMaybe<void>;

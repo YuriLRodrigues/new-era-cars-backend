@@ -16,7 +16,7 @@ export type UserEntityProps = {
   email: string;
   password: string;
   roles: UserRoles[];
-  revoked?: Date;
+  disabled?: Date;
   createdAt: Date;
   updatedAt?: Date;
 };
@@ -64,12 +64,21 @@ export class UserEntity extends Entity<UserEntityProps> {
     return this.props.updatedAt;
   }
 
-  set revoked(date: Date) {
-    this.props.revoked = date;
+  public touch() {
+    this.props.updatedAt = new Date();
+  }
+
+  set disabled(date: Date) {
+    this.props.disabled = date;
+  }
+
+  set password(password: string) {
+    this.props.password = password;
+    this.touch();
   }
 
   static create(
-    props: Optional<UserEntityProps, 'createdAt' | 'roles' | 'revoked' | 'updatedAt'>,
+    props: Optional<UserEntityProps, 'createdAt' | 'roles' | 'disabled' | 'updatedAt'>,
     id?: UniqueEntityId,
   ): UserEntity {
     const user = new UserEntity(
@@ -80,7 +89,7 @@ export class UserEntity extends Entity<UserEntityProps> {
         email: props.email,
         password: props.password,
         roles: props.roles ?? [UserRoles.Customer],
-        revoked: props.revoked ?? null,
+        disabled: props.disabled ?? null,
         createdAt: props.createdAt ?? new Date(),
         updatedAt: props.updatedAt ?? new Date(),
       },
@@ -93,7 +102,7 @@ export class UserEntity extends Entity<UserEntityProps> {
   public editInfo(props: EditUserProps): UserEntity {
     this.props.avatar = props.avatar ?? this.props.avatar;
     this.props.name = props.name ?? this.props.name;
-    this.props.username = props.username ?? this.props.username;
+    this.props.username = validateUsername(props.username) ?? this.props.username;
     this.props.updatedAt = new Date();
 
     return this;

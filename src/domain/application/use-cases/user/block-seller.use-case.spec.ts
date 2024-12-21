@@ -1,24 +1,48 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
 import { makeFakeUser } from 'test/factory/make-fake-user';
+import { InMemoryAddressRepository } from 'test/repositories/in-memory-address-repository';
+import { InMemoryAdvertisementRepository } from 'test/repositories/in-memory-advertisement-repository';
+import { InMemoryBrandRepository } from 'test/repositories/in-memory-brand-repository';
+import { InMemoryImageRepository } from 'test/repositories/in-memory-image-repository';
+import { InMemoryLikeAdvertisementRepository } from 'test/repositories/in-memory-like-advertisement-repository';
 import { InMemoryUserRepository } from 'test/repositories/in-memory-user-repository';
 
 import { BlockSellerUseCase } from './block-seller.use-case';
 
 describe('Block Seller - Use Case', () => {
   let sut: BlockSellerUseCase;
-  let inMemoryUserUseCase: InMemoryUserRepository;
+  let inMemoryBrandRepository: InMemoryBrandRepository;
+  let inMemoryAdvertisementRepository: InMemoryAdvertisementRepository;
+  let inMemoryUserRepository: InMemoryUserRepository;
+  let inMemoryLikeAdvertisementRepository: InMemoryLikeAdvertisementRepository;
+  let inMemoryImageRepository: InMemoryImageRepository;
+  let inMemoryAddressRepository: InMemoryAddressRepository;
 
   beforeEach(() => {
-    inMemoryUserUseCase = new InMemoryUserRepository();
-    sut = new BlockSellerUseCase(inMemoryUserUseCase);
+    inMemoryBrandRepository = new InMemoryBrandRepository();
+    inMemoryImageRepository = new InMemoryImageRepository();
+    inMemoryAddressRepository = new InMemoryAddressRepository();
+    inMemoryUserRepository = new InMemoryUserRepository(inMemoryAdvertisementRepository);
+    inMemoryLikeAdvertisementRepository = new InMemoryLikeAdvertisementRepository();
+    inMemoryAdvertisementRepository = new InMemoryAdvertisementRepository(
+      inMemoryBrandRepository,
+      inMemoryLikeAdvertisementRepository,
+      inMemoryUserRepository,
+      inMemoryImageRepository,
+      inMemoryAddressRepository,
+    );
+    sut = new BlockSellerUseCase(inMemoryUserRepository);
   });
 
   it('should be able to block an seller if you have Manager permission', async () => {
     const adminUser = makeFakeUser({ roles: [UserRoles.Manager] });
-    inMemoryUserUseCase.register({ user: adminUser });
+    inMemoryUserRepository.register({ user: adminUser });
+
     const sellerUser = makeFakeUser({ roles: [UserRoles.Seller] });
-    inMemoryUserUseCase.register({ user: sellerUser });
+    inMemoryUserRepository.register({ user: sellerUser });
 
     const output = await sut.execute({
       currentUserId: adminUser.id,
@@ -31,9 +55,9 @@ describe('Block Seller - Use Case', () => {
 
   it('should not be able to block an seller if you not have Manager permission', async () => {
     const user = makeFakeUser();
-    inMemoryUserUseCase.register({ user });
+    inMemoryUserRepository.register({ user });
     const sellerUser = makeFakeUser({ roles: [UserRoles.Seller] });
-    inMemoryUserUseCase.register({ user: sellerUser });
+    inMemoryUserRepository.register({ user: sellerUser });
 
     const output = await sut.execute({
       currentUserId: user.id,
@@ -41,14 +65,14 @@ describe('Block Seller - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('Invalid permission to block an seller'));
+    expect(output.value).toBeInstanceOf(NotAllowedError);
   });
 
   it('should not be able to find an user with invalid id (non-existent)', async () => {
     const adminUser = makeFakeUser({ roles: [UserRoles.Manager] });
-    inMemoryUserUseCase.register({ user: adminUser });
+    inMemoryUserRepository.register({ user: adminUser });
     const sellerUser = makeFakeUser({ roles: [UserRoles.Seller] });
-    inMemoryUserUseCase.register({ user: sellerUser });
+    inMemoryUserRepository.register({ user: sellerUser });
 
     const output = await sut.execute({
       currentUserId: adminUser.id,
@@ -56,6 +80,6 @@ describe('Block Seller - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('User not found'));
+    expect(output.value).toBeInstanceOf(ResourceNotFoundError);
   });
 });

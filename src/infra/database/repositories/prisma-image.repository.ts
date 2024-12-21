@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { PaginatedResult } from '@root/core/dto/paginated-result';
 import { AsyncMaybe, Maybe } from '@root/core/logic/Maybe';
 import {
   CreateProps,
@@ -38,6 +39,16 @@ export class PrismaImageRepository implements ImageRepository {
     return;
   }
 
+  async findManyByAdId({ id }: FindByIdProps): AsyncMaybe<{ url: string }[]> {
+    const images = await this.prismaService.image.findMany({
+      where: {
+        advertisementId: id.toValue(),
+      },
+    });
+
+    return Maybe.some(images.map((image) => ({ url: image.url })));
+  }
+
   async save({ image }: SaveProps): AsyncMaybe<void> {
     const raw = ImageMappers.toPersistence(image);
 
@@ -67,11 +78,14 @@ export class PrismaImageRepository implements ImageRepository {
     return Maybe.some(mappedImage);
   }
 
-  async findAll({ limit, page }: FindAllProps): AsyncMaybe<ImageEntity[]> {
-    const images = await this.prismaService.image.findMany({
-      take: limit,
-      skip: page,
-    });
+  async findAll({ limit, page }: FindAllProps): AsyncMaybe<PaginatedResult<ImageEntity[]>> {
+    const [images, count] = await this.prismaService.$transaction([
+      this.prismaService.image.findMany({
+        take: limit,
+        skip: (page - 1) * limit,
+      }),
+      this.prismaService.image.count(),
+    ]);
 
     const mappedImages = images.map((img) =>
       ImageEntity.create(
@@ -86,6 +100,14 @@ export class PrismaImageRepository implements ImageRepository {
 
     const paginatedImages = mappedImages.slice((page - 1) * limit, page * limit);
 
-    return Maybe.some(paginatedImages);
+    return Maybe.some({
+      data: paginatedImages,
+      meta: {
+        page,
+        perPage: limit,
+        totalPages: Math.ceil(count / limit),
+        totalCount: count,
+      },
+    });
   }
 }

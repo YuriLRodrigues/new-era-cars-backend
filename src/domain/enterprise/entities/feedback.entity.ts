@@ -6,6 +6,7 @@ export type FeedbackEntityProps = {
   stars: number;
   comment: string;
   advertisementId: UniqueEntityId;
+  title: string;
   userId: UniqueEntityId;
   createdAt: Date;
   updatedAt?: Date;
@@ -19,6 +20,10 @@ type EditFeedbackEntityProps = {
 export class FeedbackEntity extends Entity<FeedbackEntityProps> {
   get userId() {
     return this.props.userId;
+  }
+
+  get title() {
+    return this.props.title;
   }
 
   get advertisementId() {
@@ -48,6 +53,7 @@ export class FeedbackEntity extends Entity<FeedbackEntityProps> {
         advertisementId: data.advertisementId,
         stars: data.stars,
         comment: data.comment,
+        title: data.title,
         createdAt: data.createdAt ?? new Date(),
         updatedAt: data.updatedAt ?? new Date(),
       },

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InvalidCredentialsError } from '@root/core/errors/invalid-credentials-error';
 import { Either, left, right } from '@root/core/logic/Either';
 
 import { Encrypter } from '../../cryptography/encrypter';
@@ -10,7 +11,7 @@ type Input = {
   password: string;
 };
 
-type Output = Either<Error, string>;
+type Output = Either<InvalidCredentialsError, string>;
 
 @Injectable()
 export class AuthorizationUserUseCase {
@@ -26,13 +27,13 @@ export class AuthorizationUserUseCase {
     });
 
     if (userNotExists()) {
-      return left(new Error('Invalid Wrong Credencials'));
+      return left(new InvalidCredentialsError());
     }
 
     const isPasswordCorrect = await this.hashGenerator.compare(password, user.password);
 
     if (!isPasswordCorrect) {
-      return left(new Error('Invalid Wrong Credencials'));
+      return left(new InvalidCredentialsError());
     }
 
     const token = await this.encrypter.encrypt({

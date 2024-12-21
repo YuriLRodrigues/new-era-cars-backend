@@ -19,20 +19,14 @@ describe('Find All Brands - Use Case', () => {
       inMemoryBrandRepository.create({ brand });
     });
 
-    const output = await sut.execute({
-      limit: 10,
-      page: 1,
-    });
+    const output = await sut.execute();
 
     expect(output.isRight()).toBe(true);
     expect(output.value).toHaveLength(10);
   });
 
   it('should be able to return an lenght 0 if items not exist', async () => {
-    const output = await sut.execute({
-      limit: 10,
-      page: 1,
-    });
+    const output = await sut.execute();
 
     expect(output.isRight()).toBe(true);
     expect(output.value).toHaveLength(0);

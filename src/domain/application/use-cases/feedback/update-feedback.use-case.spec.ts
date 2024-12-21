@@ -1,29 +1,38 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { makeFakeAdvertisement } from 'test/factory/make-fake-advertisement';
 import { makeFakeFeedback } from 'test/factory/make-fake-feedback';
 import { makeFakeUser } from 'test/factory/make-fake-user';
 import { InMemoryAdvertisementRepository } from 'test/repositories/in-memory-advertisement-repository';
 import { InMemoryBrandRepository } from 'test/repositories/in-memory-brand-repository';
 import { InMemoryFeedbackRepository } from 'test/repositories/in-memory-feedback-repository';
+import { InMemoryLikeAdvertisementRepository } from 'test/repositories/in-memory-like-advertisement-repository';
 import { InMemoryLikeFeedbackRepository } from 'test/repositories/in-memory-like-feedback-repository';
 import { InMemoryUserRepository } from 'test/repositories/in-memory-user-repository';
 
 import { UpdateFeedbackUseCase } from './update-feedback.use-case';
 
 describe('Update Feedback - Use Case', () => {
-  let inMemoryLikeFeedbackRepository: InMemoryLikeFeedbackRepository;
-  let inMemoryUserRepository: InMemoryUserRepository;
-  let inMemoryAdvertisementRepository: InMemoryAdvertisementRepository;
   let inMemoryFeedbackRepository: InMemoryFeedbackRepository;
+  let inMemoryAdvertisementRepository: InMemoryAdvertisementRepository;
+  let inMemoryUserRepository: InMemoryUserRepository;
+  let inMemoryLikeFeedbackRepository: InMemoryLikeFeedbackRepository;
+  let inMemoryLikeAdvertisementRepository: InMemoryLikeAdvertisementRepository;
   let inMemoryBrandRepository: InMemoryBrandRepository;
   let sut: UpdateFeedbackUseCase;
 
   beforeEach(() => {
     inMemoryBrandRepository = new InMemoryBrandRepository();
-    inMemoryAdvertisementRepository = new InMemoryAdvertisementRepository(inMemoryBrandRepository);
+    inMemoryUserRepository = new InMemoryUserRepository(inMemoryAdvertisementRepository);
     inMemoryLikeFeedbackRepository = new InMemoryLikeFeedbackRepository();
-    inMemoryUserRepository = new InMemoryUserRepository();
+    inMemoryLikeAdvertisementRepository = new InMemoryLikeAdvertisementRepository();
     inMemoryFeedbackRepository = new InMemoryFeedbackRepository(inMemoryUserRepository, inMemoryLikeFeedbackRepository);
+    inMemoryAdvertisementRepository = new InMemoryAdvertisementRepository(
+      inMemoryBrandRepository,
+      inMemoryLikeAdvertisementRepository,
+      inMemoryUserRepository,
+    );
     sut = new UpdateFeedbackUseCase(inMemoryFeedbackRepository, inMemoryUserRepository);
   });
 
@@ -79,7 +88,7 @@ describe('Update Feedback - Use Case', () => {
         stars: 1,
       }),
     );
-    expect(output.value).toEqual(new Error('You do not have permission to delete this feedback'));
+    expect(output.value).toBeInstanceOf(NotAllowedError);
   });
 
   it('should not be able to update a feedback if userId is invalid (non-existent)', async () => {
@@ -100,7 +109,7 @@ describe('Update Feedback - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('User not found'));
+    expect(output.value).toBeInstanceOf(ResourceNotFoundError);
     expect(inMemoryFeedbackRepository.feedbacks[0]).toEqual(
       expect.objectContaining({
         comment: 'Initial Comment',
@@ -127,7 +136,7 @@ describe('Update Feedback - Use Case', () => {
     });
 
     expect(output.isLeft()).toBe(true);
-    expect(output.value).toEqual(new Error('Feedback not found'));
+    expect(output.value).toBeInstanceOf(ResourceNotFoundError);
     expect(inMemoryFeedbackRepository.feedbacks[0]).toEqual(
       expect.objectContaining({
         comment: 'Initial Comment',

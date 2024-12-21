@@ -23,10 +23,11 @@ export class PrismaLikeFeedbackRepository implements LikeFeedbackRepository {
     return Maybe.some(like);
   }
 
-  async findById({ feedbackId }: FindByIdProps): AsyncMaybe<LikeEntity> {
+  async findById({ feedbackId, userId }: FindByIdProps): AsyncMaybe<LikeEntity> {
     const like = await this.prismaService.like.findFirst({
       where: {
         feedbackId: feedbackId.toValue(),
+        userId: userId.toValue(),
       },
     });
 

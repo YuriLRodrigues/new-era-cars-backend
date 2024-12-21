@@ -10,7 +10,7 @@ export const makeFakeUser = (data = {} as Overwrides) => {
   const username = faker.internet.userName();
   const password = faker.internet.password();
   const roles = [UserRoles.Customer];
-  let revoked: undefined;
+  let disabled: undefined;
   const createdAt = faker.date.past();
   const updatedAt = faker.date.recent();
 
@@ -21,7 +21,7 @@ export const makeFakeUser = (data = {} as Overwrides) => {
     username: data.username ?? username,
     password: data.password ?? password,
     roles: data.roles ?? roles,
-    revoked: data.revoked ?? revoked,
+    disabled: data.disabled ?? disabled,
     createdAt: data.createdAt ?? createdAt,
     updatedAt: data.updatedAt ?? updatedAt,
   });

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import {
   Capacity,
@@ -39,7 +41,7 @@ type Input = {
   updatedAt?: Date;
 };
 
-type Output = Either<Error, null>;
+type Output = Either<ResourceNotFoundError | NotAllowedError, null>;
 
 @Injectable()
 export class UpdateAdUseCase {
@@ -76,7 +78,7 @@ export class UpdateAdUseCase {
     });
 
     if (userNotExists()) {
-      return left(new Error('User not found'));
+      return left(new ResourceNotFoundError());
     }
 
     const { isNone: adNotFound, value: advertisement } = await this.advertisementRepository.findAdById({
@@ -84,14 +86,14 @@ export class UpdateAdUseCase {
     });
 
     if (adNotFound()) {
-      return left(new Error('Ad not found'));
+      return left(new ResourceNotFoundError());
     }
 
     if (
       (user.roles.includes(UserRoles.Seller) && advertisement.userId !== user.id) ||
       (!user.roles.includes(UserRoles.Manager) && advertisement.userId !== user.id)
     ) {
-      return left(new Error('You do not have permission to update this ad'));
+      return left(new NotAllowedError());
     }
 
     advertisement.editInfo({

@@ -1,6 +1,8 @@
+import { PaginatedResult } from '@root/core/dto/paginated-result';
 import { AsyncMaybe, Maybe } from '@root/core/logic/Maybe';
 import {
   CreateProps,
+  DeleteManyProps,
   DeleteProps,
   FindAllProps,
   FindByIdProps,
@@ -28,14 +30,53 @@ export class InMemoryImageRepository implements ImageRepository {
     return Maybe.some(image);
   }
 
-  async findAll({ limit, page }: FindAllProps): AsyncMaybe<ImageEntity[]> {
+  async findAll({ limit, page }: FindAllProps): AsyncMaybe<PaginatedResult<ImageEntity[]>> {
     const images = this.images.slice((page - 1) * limit, limit * page);
 
-    return Maybe.some(images);
+    return Maybe.some({
+      data: images,
+      meta: {
+        page,
+        perPage: limit,
+        totalPages: Math.ceil(this.images.length / limit),
+        totalCount: this.images.length,
+      },
+    });
+  }
+
+  async findManyByAdId({ id }: FindByIdProps): AsyncMaybe<{ url: string }[]> {
+    const images = this.images.filter((image) => image.advertisementImageId.equals(id));
+
+    return Maybe.some(images.map((image) => ({ url: image.url })));
+  }
+
+  async findMetrics(): AsyncMaybe<{
+    totalCount: number;
+    totalInAdvertisements: number;
+    totalThumbnails: number;
+    totalUnused: number;
+  }> {
+    const totalCount = this.images.length;
+    const totalInAdvertisements = this.images.filter((image) => image.advertisementImageId).length;
+    const totalThumbnails = this.images.filter((image) => image.advertisementThumbnailId).length;
+    const totalUnused = totalCount - (totalInAdvertisements + totalThumbnails);
+
+    return Maybe.some({
+      totalCount,
+      totalInAdvertisements,
+      totalThumbnails,
+      totalUnused,
+    });
   }
 
   async delete({ imageId }: DeleteProps): AsyncMaybe<void> {
     this.images = this.images.filter((image) => !image.id.equals(imageId));
+
+    return;
+  }
+
+  async deleteMany({ imagesIds }: DeleteManyProps): AsyncMaybe<void> {
+    this.images = this.images.filter((image) => !imagesIds.includes(image.id));
 
     return;
   }

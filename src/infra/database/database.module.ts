@@ -7,6 +7,7 @@ import { FeedbackRepository } from '@root/domain/application/repositories/feedba
 import { ImageRepository } from '@root/domain/application/repositories/image.repository';
 import { LikeAdvertisementRepository } from '@root/domain/application/repositories/like-advertisement.reposiotry';
 import { LikeFeedbackRepository } from '@root/domain/application/repositories/like-feedback.reposiotry';
+import { PasswordResetTokensRepository } from '@root/domain/application/repositories/password-reset-tokens.repository';
 import { UserRepository } from '@root/domain/application/repositories/user.repository';
 
 import { PrismaService } from './prisma.service';
@@ -18,6 +19,7 @@ import { PrismaFeedbackRepository } from './repositories/prisma-feedback.reposit
 import { PrismaImageRepository } from './repositories/prisma-image.repository';
 import { PrismaLikeAdvertisementRepository } from './repositories/prisma-like-advertisement.repository';
 import { PrismaLikeFeedbackRepository } from './repositories/prisma-like-feedback.repository';
+import { PrismaPasswordResetTokensRepository } from './repositories/prisma-password-reset-tokens.repository';
 import { PrismaUserRepository } from './repositories/prisma-user.repository';
 
 @Module({
@@ -63,6 +65,10 @@ import { PrismaUserRepository } from './repositories/prisma-user.repository';
       provide: BrandRepository,
       useClass: PrismaBrandRepository,
     },
+    {
+      provide: PasswordResetTokensRepository,
+      useClass: PrismaPasswordResetTokensRepository,
+    },
   ],
   exports: [
     PrismaService,
@@ -76,6 +82,7 @@ import { PrismaUserRepository } from './repositories/prisma-user.repository';
     LikeFeedbackRepository,
     LikeAdvertisementRepository,
     BrandRepository,
+    PasswordResetTokensRepository,
   ],
 })
 export class DatabaseModule {}

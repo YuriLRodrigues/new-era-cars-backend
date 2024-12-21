@@ -3,7 +3,7 @@ import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { LikeEntity } from './like.entity';
 
 describe('Like - Entity', () => {
-  it('should be able to create a like in advertisement with entity', () => {
+  it('should be able to create a like in advertisement as an entity', () => {
     const output = LikeEntity.create({
       userId: new UniqueEntityId('1'),
       advertisementId: new UniqueEntityId('1'),
@@ -17,7 +17,7 @@ describe('Like - Entity', () => {
     expect(output.updatedAt).toBeInstanceOf(Date);
   });
 
-  it('should be able to create a like in feedback with entity', () => {
+  it('should be able to create a like in feedback as an entity', () => {
     const output = LikeEntity.create({
       userId: new UniqueEntityId('1'),
       advertisementId: new UniqueEntityId('1'),

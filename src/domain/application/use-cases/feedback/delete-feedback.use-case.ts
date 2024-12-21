@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
 
@@ -11,7 +13,7 @@ type Input = {
   feedbackId: UniqueEntityId;
 };
 
-type Output = Either<Error, void>;
+type Output = Either<ResourceNotFoundError | NotAllowedError, void>;
 
 @Injectable()
 export class DeleteFeedbackUseCase {
@@ -24,13 +26,13 @@ export class DeleteFeedbackUseCase {
     const { isNone: userNotExists, value: user } = await this.userRepository.findById({ id: userId });
 
     if (userNotExists()) {
-      return left(new Error('User not found'));
+      return left(new ResourceNotFoundError());
     }
 
     const { isNone: feedbackNotExists, value: feedback } = await this.feedbackRepository.findById({ feedbackId });
 
     if (feedbackNotExists()) {
-      return left(new Error('Feedback not found'));
+      return left(new ResourceNotFoundError());
     }
 
     const isOwnerFeedback = feedback.userId.equals(user.id);
@@ -43,6 +45,6 @@ export class DeleteFeedbackUseCase {
       return right(null);
     }
 
-    return left(new Error('You do not have permission to delete this feedback'));
+    return left(new NotAllowedError());
   }
 }

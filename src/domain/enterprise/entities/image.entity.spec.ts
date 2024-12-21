@@ -3,7 +3,7 @@ import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { ImageEntity } from './image.entity';
 
 describe('Image - Entity', () => {
-  it('should be able to create a image with entity', () => {
+  it('should be able to create a image as an entity', () => {
     const output = ImageEntity.create({
       url: 'url-test',
       advertisementImageId: new UniqueEntityId(),

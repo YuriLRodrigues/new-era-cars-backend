@@ -1,7 +1,9 @@
 export const validateUsername = (username: string) => {
-  if (/^[a-zA-Z0-9_]+$/.test(username)) {
-    return username.toLowerCase();
+  const sanitizedUsername = username.replace(/\s+/g, '_');
+
+  if (/^[a-zA-Z0-9_]+$/.test(sanitizedUsername)) {
+    return sanitizedUsername.toLowerCase();
   } else {
-    return username.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+    return sanitizedUsername.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
   }
 };

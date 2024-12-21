@@ -12,17 +12,21 @@ export type DeleteProps = {
 
 export type FindByIdProps = {
   advertisementId: UniqueEntityId;
+  userId: UniqueEntityId;
 };
 
 export type FindAllProps = {
   advertisementId: UniqueEntityId;
 };
 
+export type FindCountLikesProps = {
+  advertisementId: UniqueEntityId;
+};
+
 export abstract class LikeAdvertisementRepository {
   abstract create({ like }: CreateProps): AsyncMaybe<LikeEntity>;
-  abstract findById({ advertisementId }: FindByIdProps): AsyncMaybe<LikeEntity>;
+  abstract findById({ advertisementId, userId }: FindByIdProps): AsyncMaybe<LikeEntity>;
   abstract findAll({ advertisementId }: FindAllProps): AsyncMaybe<LikeEntity[]>;
-  abstract findAllLikes({ advertisementId }: FindAllProps): AsyncMaybe<number>;
+  abstract countLikes({ advertisementId }: FindAllProps): AsyncMaybe<number>;
   abstract delete({ likeId }: DeleteProps): AsyncMaybe<void>;
-  // abstract save({ like }: SaveProps): AsyncMaybe<void>; // kalil n precisa aq pq eu nao tenho um update, e o meu delete acontece dentro do create
 }

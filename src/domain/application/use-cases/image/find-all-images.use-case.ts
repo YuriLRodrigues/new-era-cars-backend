@@ -1,4 +1,6 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { PaginatedResult } from '@root/core/dto/paginated-result';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import { ImageEntity } from '@root/domain/enterprise/entities/image.entity';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
@@ -12,7 +14,7 @@ type Input = {
   userId: UniqueEntityId;
 };
 
-type Output = Either<Error, ImageEntity[]>;
+type Output = Either<NotAllowedError, PaginatedResult<ImageEntity[]>>;
 
 export class FindAllImagesUseCase {
   constructor(
@@ -26,7 +28,7 @@ export class FindAllImagesUseCase {
     });
 
     if (userNotExists() || !user.roles.includes(UserRoles.Manager)) {
-      return left(new Error('You do not have permission to find all images'));
+      return left(new NotAllowedError());
     }
 
     const { value: images } = await this.imageRepository.findAll({ limit, page });

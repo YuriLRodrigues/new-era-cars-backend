@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "User" ADD COLUMN     "revoked" TIMESTAMP(3);
+ALTER TABLE "User" ADD COLUMN     "disabled" TIMESTAMP(3);

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
 
@@ -11,7 +13,7 @@ type Input = {
   userId: UniqueEntityId;
 };
 
-type Output = Either<Error, void>;
+type Output = Either<NotAllowedError | ResourceNotFoundError, void>;
 
 @Injectable()
 export class DeleteAdUseCase {
@@ -24,7 +26,7 @@ export class DeleteAdUseCase {
     const { isNone: userNotFound, value: user } = await this.userRespository.findById({ id: userId });
 
     if (userNotFound()) {
-      return left(new Error('User not found'));
+      return left(new ResourceNotFoundError());
     }
 
     const { isNone: adNotExists, value: advertisement } = await this.advertisementRepository.findAdById({
@@ -32,11 +34,11 @@ export class DeleteAdUseCase {
     });
 
     if (adNotExists()) {
-      return left(new Error('Advertisement not found'));
+      return left(new ResourceNotFoundError());
     }
 
     if (user.id !== advertisement.userId && !user.roles.includes(UserRoles.Manager)) {
-      return left(new Error('You do not have permission to delete this ad'));
+      return left(new NotAllowedError());
     }
 
     await this.advertisementRepository.deleteAd({ advertisementId });

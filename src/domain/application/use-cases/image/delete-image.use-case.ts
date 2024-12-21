@@ -1,4 +1,6 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
 
@@ -10,7 +12,7 @@ type Input = {
   userId: UniqueEntityId;
 };
 
-type Output = Either<Error, void>;
+type Output = Either<NotAllowedError | ResourceNotFoundError, void>;
 
 export class DeleteImageUseCase {
   constructor(
@@ -24,13 +26,13 @@ export class DeleteImageUseCase {
     });
 
     if (userNotExists() || !user.roles.includes(UserRoles.Manager)) {
-      return left(new Error('You do not have permission to delete this image'));
+      return left(new NotAllowedError());
     }
 
     const { isNone: imageNotExists, value: image } = await this.imageRepository.findById({ id });
 
     if (imageNotExists()) {
-      return left(new Error('Image not found'));
+      return left(new ResourceNotFoundError());
     }
 
     await this.imageRepository.delete({ imageId: image.id });

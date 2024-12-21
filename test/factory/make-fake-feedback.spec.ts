@@ -4,7 +4,7 @@ import { FeedbackEntity } from '@root/domain/enterprise/entities/feedback.entity
 import { makeFakeFeedback } from './make-fake-feedback';
 
 describe('Make Fake Feedback - Function', () => {
-  it('should be able to create a feedback with entity', () => {
+  it('should be able to create a feedback as an entity', () => {
     const output = makeFakeFeedback();
 
     expect(output).toBeInstanceOf(FeedbackEntity);

@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
 
 import { UserRepository } from '../../repositories/user.repository';
 
-type Output = Either<Error, void>;
+type Output = Either<ResourceNotFoundError | NotAllowedError, void>;
 
 type Input = {
   currentUserId: UniqueEntityId;
@@ -22,7 +24,7 @@ export class DeleteUserUseCase {
     });
 
     if (adminUserNotFound() || !adminUser?.roles.includes(UserRoles.Manager)) {
-      return left(new Error('Invalid permission to delete an user'));
+      return left(new NotAllowedError());
     }
 
     const { isNone: userNotFound } = await this.userRepository.findById({
@@ -30,7 +32,7 @@ export class DeleteUserUseCase {
     });
 
     if (userNotFound()) {
-      return left(new Error('User not found'));
+      return left(new ResourceNotFoundError());
     }
 
     await this.userRepository.delete({ userId });

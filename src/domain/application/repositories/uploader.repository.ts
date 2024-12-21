@@ -9,6 +9,14 @@ export type UploadImageParams = {
   image: UploadParams;
 };
 
+export type DeleteImageParams = {
+  image: UploadParams;
+};
+
+export type DeleteManyImagesParams = {
+  images: UploadParams[];
+};
+
 export type UploadReturn = {
   url: string;
   size: number;
@@ -17,4 +25,6 @@ export type UploadReturn = {
 
 export abstract class Uploader {
   abstract uploadImage(params: UploadImageParams): Promise<UploadReturn>;
+  // abstract deleteImage(params: UploadImageParams): Promise<void>;
+  // abstract deleteManyImages(params: DeleteManyImagesParams): Promise<void>;
 }

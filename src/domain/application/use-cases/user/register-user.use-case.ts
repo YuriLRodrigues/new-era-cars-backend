@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import { ResourceAlreadyExistsError } from '@root/core/errors/resource-already-exists-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import { UserEntity, UserRoles } from '@root/domain/enterprise/entities/user.entity';
 
 import { HashGenerator } from '../../cryptography/hash-generator';
 import { UserRepository } from '../../repositories/user.repository';
 
-type Output = Either<Error, UserEntity>;
+type Output = Either<ResourceAlreadyExistsError, UserEntity>;
 
 type Input = {
   email: string;
@@ -27,13 +28,13 @@ export class RegisterUserUseCase {
     const { isSome: userEmailExists } = await this.userRepository.findByEmail({ email });
 
     if (userEmailExists()) {
-      return left(new Error('User already exists'));
+      return left(new ResourceAlreadyExistsError());
     }
 
     const { isSome: userUsernameExists } = await this.userRepository.findByUsername({ username });
 
     if (userUsernameExists()) {
-      return left(new Error('User already exists'));
+      return left(new ResourceAlreadyExistsError());
     }
 
     const hashedPassword = await this.hashGenerator.hash(password);

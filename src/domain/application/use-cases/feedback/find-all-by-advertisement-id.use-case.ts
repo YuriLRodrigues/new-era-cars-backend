@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { PaginatedResult } from '@root/core/dto/paginated-result';
 import { Either, right } from '@root/core/logic/Either';
 import { FeedbackDetails } from '@root/domain/enterprise/value-object/feedback-details';
 
@@ -11,7 +12,7 @@ type Input = {
   page: number;
 };
 
-type Output = Either<Error, FeedbackDetails[]>;
+type Output = Either<Error, PaginatedResult<FeedbackDetails[]>>;
 
 @Injectable()
 export class FindAllByAdvertisementIdUseCase {

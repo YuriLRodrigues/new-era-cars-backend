@@ -1,6 +1,8 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { ValueObject } from '@root/core/domain/value-object/value-object';
 
+import { SoldStatus } from '../entities/advertisement.entity';
+
 type FavoriteDetailsProps = {
   id: UniqueEntityId;
   advertisement: {
@@ -8,18 +10,38 @@ type FavoriteDetailsProps = {
     title: string;
     thumbnailUrl: string;
     price: number;
-    status: string;
+    status: SoldStatus;
   };
   user: {
     id: UniqueEntityId;
     name: string;
     avatar: string;
   };
-  favorites: number;
+  favoritesCount: number;
   createdAt: Date;
 };
 
 export class FavoriteAdminDetails extends ValueObject<FavoriteDetailsProps> {
+  get id() {
+    return this.props.id;
+  }
+
+  get advertisement() {
+    return this.props.advertisement;
+  }
+
+  get user() {
+    return this.props.user;
+  }
+
+  get favoritesCount() {
+    return this.props.favoritesCount;
+  }
+
+  get createdAt() {
+    return this.props.createdAt;
+  }
+
   static create(props: FavoriteDetailsProps) {
     return new FavoriteAdminDetails({
       id: props.id,
@@ -35,7 +57,7 @@ export class FavoriteAdminDetails extends ValueObject<FavoriteDetailsProps> {
         id: props.user.id,
         name: props.user.name,
       },
-      favorites: props.favorites,
+      favoritesCount: props.favoritesCount,
       createdAt: props.createdAt,
     });
   }

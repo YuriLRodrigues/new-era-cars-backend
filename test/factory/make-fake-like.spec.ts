@@ -4,7 +4,7 @@ import { LikeEntity } from '@root/domain/enterprise/entities/like.entity';
 import { makeFakeLike } from './make-fake-like';
 
 describe('Make Fake Like - Function', () => {
-  it('should be able to create a like with entity', () => {
+  it('should be able to create a like as an entity', () => {
     const output = makeFakeLike();
 
     expect(output).toBeInstanceOf(LikeEntity);

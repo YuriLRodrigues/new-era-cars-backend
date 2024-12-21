@@ -15,6 +15,7 @@ type Overwrides = Partial<AdvertisementEntity>;
 
 export const makeFakeAdvertisement = (data = {} as Overwrides) => {
   const brandId = new UniqueEntityId();
+  const id = new UniqueEntityId();
   const capacity = Capacity.Two;
   const color = Color.Black;
   const createdAt = faker.date.recent();
@@ -26,7 +27,7 @@ export const makeFakeAdvertisement = (data = {} as Overwrides) => {
   const localization = faker.location.state();
   const model = Model.SUV;
   const phone = faker.phone.number();
-  const price = faker.number.float();
+  const price = faker.number.float({ min: 10, max: 100000 });
   const thumbnailUrl = faker.internet.url();
   const title = faker.lorem.slug();
   const userId = new UniqueEntityId();
@@ -36,27 +37,30 @@ export const makeFakeAdvertisement = (data = {} as Overwrides) => {
   const soldStatus = SoldStatus.Active;
   const updatedAt = faker.date.past();
 
-  return AdvertisementEntity.create({
-    brandId: data.brandId || brandId,
-    capacity: data.capacity || capacity,
-    color: data.color || color,
-    createdAt: data.createdAt || createdAt,
-    description: data.description || description,
-    doors: data.doors || doors,
-    fuel: data.fuel || fuel,
-    gearBox: data.gearBox || gearBox,
-    km: data.km || km,
-    localization: data.localization || localization,
-    model: data.model || model,
-    phone: data.phone || phone,
-    price: data.price || price,
-    thumbnailUrl: data.thumbnailUrl || thumbnailUrl,
-    title: data.title || title,
-    userId: data.userId || userId,
-    year: data.year || year,
-    details: data.details || details,
-    salePrice: data.salePrice || salePrice,
-    updatedAt: data.updatedAt || updatedAt,
-    soldStatus: data.soldStatus || soldStatus,
-  });
+  return AdvertisementEntity.create(
+    {
+      brandId: data.brandId || brandId,
+      capacity: data.capacity || capacity,
+      color: data.color || color,
+      createdAt: data.createdAt || createdAt,
+      description: data.description || description,
+      doors: data.doors || doors,
+      fuel: data.fuel || fuel,
+      gearBox: data.gearBox || gearBox,
+      km: data.km || km,
+      localization: data.localization || localization,
+      model: data.model || model,
+      phone: data.phone || phone,
+      price: data.price || price,
+      thumbnailUrl: data.thumbnailUrl || thumbnailUrl,
+      title: data.title || title,
+      userId: data.userId || userId,
+      year: data.year || year,
+      details: data.details || details,
+      salePrice: data.salePrice || salePrice,
+      updatedAt: data.updatedAt || updatedAt,
+      soldStatus: data.soldStatus || soldStatus,
+    },
+    data.id || id,
+  );
 };

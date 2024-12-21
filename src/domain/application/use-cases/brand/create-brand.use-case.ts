@@ -1,4 +1,7 @@
 import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
+import { NotAllowedError } from '@root/core/errors/not-allowed-error';
+import { ResourceAlreadyExistsError } from '@root/core/errors/resource-already-exists-error';
+import { ResourceNotFoundError } from '@root/core/errors/resource-not-found-error';
 import { Either, left, right } from '@root/core/logic/Either';
 import { BrandEntity } from '@root/domain/enterprise/entities/brand.entity';
 import { UserRoles } from '@root/domain/enterprise/entities/user.entity';
@@ -12,7 +15,7 @@ type Input = {
   userId: UniqueEntityId;
 };
 
-type Output = Either<Error, BrandEntity>;
+type Output = Either<ResourceAlreadyExistsError | ResourceNotFoundError | NotAllowedError, BrandEntity>;
 
 export class CreateBrandUseCase {
   constructor(
@@ -24,17 +27,17 @@ export class CreateBrandUseCase {
     const { isNone: userNotExists, value: user } = await this.userRepository.findById({ id: userId });
 
     if (userNotExists()) {
-      return left(new Error('User not found'));
+      return left(new ResourceNotFoundError());
     }
 
     if (!user.roles.includes(UserRoles.Manager)) {
-      return left(new Error('You are not allowed to create a brand'));
+      return left(new NotAllowedError());
     }
 
     const { isSome: brandAlreadyExists } = await this.brandRepository.findByName({ name });
 
     if (brandAlreadyExists()) {
-      return left(new Error('Brand already exists'));
+      return left(new ResourceAlreadyExistsError());
     }
 
     const brand = BrandEntity.create({

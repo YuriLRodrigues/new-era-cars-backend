@@ -3,7 +3,7 @@ import { UniqueEntityId } from '@root/core/domain/entity/unique-id.entity';
 import { BrandEntity } from './brand.entity';
 
 describe('Brand - Entity', () => {
-  it('should be able to create a brand with entity', () => {
+  it('should be able to create a brand as an entity', () => {
     const output = BrandEntity.create({
       logoUrl: 'url-test',
       name: 'Brand Test',
